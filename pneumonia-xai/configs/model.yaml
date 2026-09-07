@@ -1,0 +1,8 @@
+# Model configuration (G-4).
+architecture: vgg16_baseline
+learning_rate: 0.0001
+epochs: 15
+early_stopping_patience: 4
+dense_units: 256
+dropout: 0.5
+last_conv_layer: block5_conv3

@@ -1,0 +1,16 @@
+# Explanation-method configuration (G-4).
+#
+# occlusion_patch/stride and scorecam_max_channels were tuned down from the
+# textbook-default values after a real timing test on this project's
+# CPU-only dev machine: the originals (patch=16/stride=8 -> 784 positions;
+# scorecam over the full 512 conv channels) made a single evaluate.py pass
+# take 17+ hours. These values keep both methods' qualitative behaviour
+# (still occludes/samples enough of the image to be meaningful) while being
+# tractable without a GPU. See docs/decisions_log.md.
+default_method: gradcam
+occlusion_patch: 32
+occlusion_stride: 16
+ig_steps: 16
+scorecam_batch: 16
+scorecam_max_channels: 64
+shap_background_size: 5

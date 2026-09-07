@@ -1,0 +1,12 @@
+# Data configuration (G-4). Change values here, never in code.
+dataset_dir: dataset/chest_xray
+img_size: [224, 224]
+batch_size: 32
+seed: 42
+# Patient-level split ratios. Must sum to 1.0. "calibration" feeds the
+# conformal predictor (U-1) and must never be touched during training.
+split_ratios:
+  train: 0.70
+  val: 0.10
+  calibration: 0.10
+  test: 0.10
