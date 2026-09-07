@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PneumoScan AI — Explainable Chest X-Ray Pneumonia Detection</title>
+<meta name="description" content="Upload a chest X-ray and get an AI pneumonia prediction with a conformal prediction set and a choice of six explanation methods." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+{% include '_style.html' %}
+  .hero{padding:66px 0 40px}
+  .upload{padding:26px;max-width:720px;margin:34px auto 0}
+  .drop{display:block;position:relative;border:2px dashed rgba(0,212,255,.45);border-radius:16px;padding:46px 22px;text-align:center;
+    cursor:pointer;background:rgba(0,212,255,.04);transition:.2s;animation:pulseBorder 2.6s ease-in-out infinite}
+  @keyframes pulseBorder{0%,100%{border-color:rgba(0,212,255,.35);box-shadow:0 0 0 rgba(0,212,255,0)}
+    50%{border-color:rgba(0,212,255,.9);box-shadow:0 0 34px rgba(0,212,255,.28),inset 0 0 34px rgba(0,212,255,.08)}}
+  .drop:hover,.drop.drag{background:rgba(0,212,255,.09)}
+  .drop svg{width:62px;height:62px;stroke:var(--cyan);fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;
+    filter:drop-shadow(0 0 12px rgba(0,212,255,.7));animation:breathe 3.4s ease-in-out infinite}
+  @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+  .drop h3{margin:14px 0 5px;font-size:17px}
+  .drop p{margin:0;color:var(--muted);font-size:13.5px}
+  .drop input{display:none}
+  .preview{display:none;margin-top:20px;text-align:center}
+  .preview img{max-height:290px;max-width:100%;border-radius:14px;border:1px solid rgba(0,212,255,.3);
+    box-shadow:0 0 30px rgba(0,212,255,.2);background:#000}
+  .fname{margin-top:9px;font-size:13px;color:var(--muted);word-break:break-all}
+  .err{margin-top:18px;padding:13px 15px;border-radius:12px;font-size:14px;
+    background:rgba(255,71,87,.12);border:1px solid rgba(255,71,87,.45);color:#ffb3ba}
+  .results{margin-top:64px}
+  .banner{position:relative;overflow:hidden;padding:28px 26px;display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+  .banner.bad{border-color:rgba(255,71,87,.5);box-shadow:0 0 60px rgba(255,71,87,.2)}
+  .banner.good{border-color:rgba(46,213,115,.5);box-shadow:0 0 60px rgba(46,213,115,.16)}
+  .banner.abstain{border-color:rgba(255,176,32,.55);box-shadow:0 0 60px rgba(255,176,32,.22);
+    background:rgba(255,176,32,.06)}
+  .dot{width:14px;height:14px;border-radius:50%;flex:none}
+  .dot.bad{background:var(--red);box-shadow:0 0 14px var(--red)}
+  .dot.good{background:var(--green);box-shadow:0 0 14px var(--green)}
+  .dot.abstain{background:var(--amber);box-shadow:0 0 14px var(--amber)}
+  .btxt h2{margin:0 0 6px;font-size:clamp(20px,3.2vw,28px);letter-spacing:-.02em}
+  .btxt p{margin:0;color:var(--muted);font-size:14px}
+  .bad-c{color:var(--red)}
+  .good-c{color:var(--green)}
+  .amber-c{color:var(--amber)}
+  .setbox{padding:20px 24px;margin-top:18px}
+  .setrow{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px}
+  .setrow span{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .setchip{display:inline-block;padding:6px 14px;border-radius:999px;font-weight:700;font-size:14px;margin-right:8px;
+    border:1px solid var(--line)}
+  .setchip.pneu{color:var(--red);border-color:rgba(255,71,87,.5);background:rgba(255,71,87,.08)}
+  .setchip.norm{color:var(--green);border-color:rgba(46,213,115,.5);background:rgba(46,213,115,.08)}
+  .viewer-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}
+  .icard{padding:16px}
+  .icard h4{margin:0 0 12px;font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .icard select{background:#101827;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-size:12.5px}
+  .imgstage{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#070a12;
+    cursor:grab;touch-action:none}
+  .imgstage .layer{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+    transform-origin:0 0;transition:opacity .1s}
+  .imgstage .stage-inner{position:relative;width:100%;padding-top:100%}
+  .opacityrow{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12px;color:var(--muted)}
+  .opacityrow input{flex:1}
+  .hint{font-size:11px;color:var(--muted);margin-top:6px}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+  .actions .btn.small{padding:10px 18px;font-size:13.5px}
+  .actions .btn.agree{border-color:rgba(46,213,115,.45);color:var(--green)}
+  .actions .btn.disagree{border-color:rgba(255,71,87,.45);color:var(--red)}
+  .reasonbox{display:none;margin-top:14px}
+  .reasonbox textarea{width:100%;min-height:70px;background:#101827;color:var(--ink);border:1px solid var(--line);
+    border-radius:10px;padding:10px;font-family:inherit;font-size:13.5px}
+  .ackmsg{margin-top:10px;font-size:13px;color:var(--green)}
+  .concept-panel{padding:18px 22px;margin-top:20px}
+  @media(max-width:900px){.viewer-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="orbs" id="orbs"></div>
+{% include '_nav.html' %}
+
+<main class="wrap">
+  <section class="hero">
+    <h1><span class="glow">PneumoScan AI</span></h1>
+    <p class="sub">AI-Powered Pneumonia Detection with a calibrated prediction set and a real choice of explanation methods.</p>
+
+    <section class="glass upload" id="upload">
+      <form action="/predict" method="POST" enctype="multipart/form-data">
+        <label class="drop" id="drop" for="xray">
+          <svg viewBox="0 0 24 24"><path d="M12 4v7"/><path d="M12 8c-1.2-2-3-2.6-4.4-2.2C6 6.2 5.4 7.6 5.4 9.4c0 3.4.6 6.4 1.6 8.2.7 1.3 2.6 1.3 3.3 0 .8-1.5 1.2-3.6 1.2-6"/><path d="M12 8c1.2-2 3-2.6 4.4-2.2 1.6.4 2.2 1.8 2.2 3.6 0 3.4-.6 6.4-1.6 8.2-.7 1.3-2.6 1.3-3.3 0-.8-1.5-1.2-3.6-1.2-6"/></svg>
+          <h3>Drop your chest X-ray here</h3>
+          <p>or click to browse &mdash; JPG or PNG, max 10&nbsp;MB</p>
+          <input type="file" name="xray" id="xray" accept="image/jpeg,image/png" required />
+        </label>
+
+        <div class="preview" id="preview">
+          <img id="previewImg" alt="Selected X-ray preview" />
+          <div class="fname" id="fileName"></div>
+        </div>
+
+        <button type="submit" class="btn full">Analyze X-Ray</button>
+      </form>
+
+      {% if error %}
+      <div class="err">{{ error }}</div>
+      {% endif %}
+    </section>
+  </section>
+
+  {% if uid %}
+  <section class="results" id="results">
+    {% if abstain %}
+    <div class="glass banner abstain">
+      <div class="dot abstain"></div>
+      <div class="btxt">
+        <h2 class="amber-c">&#9888; REFER TO RADIOLOGIST</h2>
+        <p>The {{ coverage_pct }}%-coverage prediction set contains more than one label at this confidence
+          level -- the model itself is flagging genuine ambiguity, not just a low raw score.</p>
+      </div>
+    </div>
+    {% elif label == 'PNEUMONIA' %}
+    <div class="glass banner bad">
+      <div class="dot bad"></div>
+      <div class="btxt">
+        <h2 class="bad-c">PNEUMONIA</h2>
+        <p>Radiographic patterns consistent with pneumonia. Clinical correlation required.</p>
+      </div>
+    </div>
+    {% else %}
+    <div class="glass banner good">
+      <div class="dot good"></div>
+      <div class="btxt">
+        <h2 class="good-c">NORMAL</h2>
+        <p>No radiographic evidence of pneumonia found.</p>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="glass setbox">
+      <div class="setrow">
+        <span>{{ coverage_pct }}% coverage prediction set</span>
+        <span>raw model confidence: {{ confidence }}%</span>
+      </div>
+      <div style="margin-top:10px">
+        {% if not conformal_calibrated %}
+        <span class="pill na">Conformal predictor not calibrated -- run scripts/evaluate.py</span>
+        {% elif pred_set %}
+          {% for l in pred_set %}
+          <span class="setchip {{ 'pneu' if l == 'PNEUMONIA' else 'norm' }}">{{ l }}</span>
+          {% endfor %}
+        {% else %}
+        <span class="pill na">Empty set -- input outside calibration support</span>
+        {% endif %}
+      </div>
+      <p class="hint">A set of one label is an actionable prediction at this coverage level; a set of both means the model has no statistically defensible basis to choose, which is exactly when the abstention banner fires.</p>
+    </div>
+
+    <div class="viewer-grid">
+      <div class="glass icard">
+        <h4>Method A
+          <select id="methodA">
+            {% for name, info in method_info.items() %}
+            <option value="{{ name }}" {{ 'selected' if name == default_method }}>{{ info.label }}</option>
+            {% endfor %}
+          </select>
+        </h4>
+        <div class="imgstage" id="stageA">
+          <div class="stage-inner">
+            <img class="layer" id="baseImgA" src="{{ img_url }}" alt="Original chest X-ray" />
+            <img class="layer" id="heatImgA" src="{{ heatmap_url }}" style="opacity:.45" alt="Explanation overlay" />
+          </div>
+        </div>
+        <div class="opacityrow">Opacity <input type="range" id="opacityA" min="0" max="100" value="45"></div>
+        <p class="hint" id="notesA"></p>
+      </div>
+      <div class="glass icard">
+        <h4>Method B (comparison)
+          <select id="methodB">
+            <option value="">None</option>
+            {% for name, info in method_info.items() %}
+            <option value="{{ name }}">{{ info.label }}</option>
+            {% endfor %}
+          </select>
+        </h4>
+        <div class="imgstage" id="stageB">
+          <div class="stage-inner">
+            <img class="layer" id="baseImgB" src="{{ img_url }}" alt="Original chest X-ray" />
+            <img class="layer" id="heatImgB" style="opacity:.45;display:none" alt="Comparison explanation overlay" />
+          </div>
+        </div>
+        <div class="opacityrow">Opacity <input type="range" id="opacityB" min="0" max="100" value="45"></div>
+        <p class="hint" id="notesB">Pick a second method to compare side by side.</p>
+      </div>
+    </div>
+    <p class="hint">Scroll to zoom, drag to pan on either image -- this is a plain zoom/pan viewer, not DICOM
+      windowing (the dataset ships as JPEG, not DICOM).</p>
+
+    <div class="glass concept-panel">
+      <span class="pill na">Not available</span>
+      <p class="hint" style="margin-top:8px">Concept intervention panel requires the concept-bottleneck model (M-3)
+        and derived concept labels (D-5) -- neither exists in this build. See docs/decisions_log.md.</p>
+    </div>
+
+    <div class="actions">
+      <button class="btn small agree" id="agreeBtn">I agree</button>
+      <button class="btn small disagree" id="disagreeBtn">I disagree</button>
+      {% if abstain %}
+      <button class="btn small" id="ackBtn">Acknowledge referral</button>
+      {% endif %}
+    </div>
+    <div class="reasonbox glass" id="reasonBox">
+      <textarea id="reasonText" placeholder="Why do you disagree with this prediction? (logged to the audit trail)"></textarea>
+      <button class="btn small" id="submitReason" style="margin-top:10px">Submit</button>
+    </div>
+    <div class="ackmsg" id="ackMsg" style="display:none">Logged to the audit trail. Thank you.</div>
+
+    <div style="text-align:center;margin-top:30px">
+      <a href="#upload" class="btn" id="again">Analyze Another X-Ray</a>
+    </div>
+  </section>
+  {% endif %}
+</main>
+<p class="foot">PneumoScan AI &middot; For research and educational use only. Not a substitute for professional medical diagnosis.</p>
+<script>
+(function(){
+  var o=document.getElementById('orbs');
+  for(var i=0;i<26;i++){
+    var s=document.createElement('i'),d=2+Math.random()*4;
+    s.style.width=s.style.height=d+'px';
+    s.style.left=(Math.random()*100)+'%';
+    s.style.animationDuration=(12+Math.random()*18)+'s';
+    s.style.animationDelay=(-Math.random()*25)+'s';
+    if(i%4===0){s.style.background='#2ed573';s.style.boxShadow='0 0 12px 2px rgba(46,213,115,.5)';}
+    o.appendChild(s);
+  }
+})();
+
+(function(){
+  var drop=document.getElementById('drop'),input=document.getElementById('xray'),
+      prev=document.getElementById('preview'),img=document.getElementById('previewImg'),
+      fname=document.getElementById('fileName');
+  if(!drop) return;
+  ['dragenter','dragover'].forEach(function(e){drop.addEventListener(e,function(ev){ev.preventDefault();drop.classList.add('drag')})});
+  ['dragleave','drop'].forEach(function(e){drop.addEventListener(e,function(ev){ev.preventDefault();drop.classList.remove('drag')})});
+  drop.addEventListener('drop',function(ev){var f=ev.dataTransfer.files;if(f&&f.length){input.files=f;show(f[0]);}});
+  input.addEventListener('change',function(){if(input.files[0])show(input.files[0])});
+  function show(f){
+    if(!/^image\/(jpeg|png)$/.test(f.type)){alert('Please choose a JPG or PNG image.');return;}
+    var r=new FileReader();r.onload=function(e){img.src=e.target.result;prev.style.display='block'};
+    r.readAsDataURL(f);fname.textContent=f.name;
+  }
+  var again=document.getElementById('again');
+  if(again)again.addEventListener('click',function(e){e.preventDefault();
+    document.getElementById('upload').scrollIntoView({behavior:'smooth',block:'center'})});
+})();
+
+{% if uid %}
+(function(){
+  var uid = {{ uid|tojson }};
+
+  function wireStage(prefix){
+    var stage=document.getElementById('stage'+prefix), heat=document.getElementById('heatImg'+prefix);
+    var scale=1, tx=0, ty=0, dragging=false, lastX=0, lastY=0;
+    function apply(){
+      var t='translate('+tx+'px,'+ty+'px) scale('+scale+')';
+      stage.querySelectorAll('.layer').forEach(function(l){l.style.transform=t});
+    }
+    stage.addEventListener('wheel',function(e){
+      e.preventDefault();
+      scale=Math.min(4,Math.max(1,scale+(e.deltaY<0?0.15:-0.15)));
+      apply();
+    },{passive:false});
+    stage.addEventListener('mousedown',function(e){dragging=true;lastX=e.clientX;lastY=e.clientY;stage.style.cursor='grabbing'});
+    window.addEventListener('mouseup',function(){dragging=false;stage.style.cursor='grab'});
+    window.addEventListener('mousemove',function(e){
+      if(!dragging)return;
+      tx+=e.clientX-lastX; ty+=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;
+      apply();
+    });
+  }
+  wireStage('A'); wireStage('B');
+
+  function wireOpacity(prefix){
+    var slider=document.getElementById('opacity'+prefix), heat=document.getElementById('heatImg'+prefix);
+    slider.addEventListener('input',function(){ heat.style.opacity=(slider.value/100); });
+  }
+  wireOpacity('A'); wireOpacity('B');
+
+  function fetchMethod(method, prefix){
+    if(!method){
+      document.getElementById('heatImg'+prefix).style.display='none';
+      document.getElementById('notes'+prefix).textContent='Pick a second method to compare side by side.';
+      return;
+    }
+    fetch('/explain/'+uid+'/'+method).then(function(r){return r.json()}).then(function(data){
+      if(data.error) return;
+      var heat=document.getElementById('heatImg'+prefix);
+      heat.src=data.url; heat.style.display='block';
+      document.getElementById('notes'+prefix).textContent=data.notes;
+    });
+  }
+  document.getElementById('methodA').addEventListener('change',function(e){fetchMethod(e.target.value,'A')});
+  document.getElementById('methodB').addEventListener('change',function(e){fetchMethod(e.target.value,'B')});
+  fetchMethod(document.getElementById('methodA').value,'A');
+
+  function logAction(action, reason){
+    fetch('/audit/action',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({uid:uid, action:action, reason:reason||''})})
+      .then(function(){document.getElementById('ackMsg').style.display='block'});
+  }
+  document.getElementById('agreeBtn').addEventListener('click',function(){logAction('agree')});
+  var ackBtn=document.getElementById('ackBtn');
+  if(ackBtn)ackBtn.addEventListener('click',function(){logAction('abstain_acknowledged')});
+  document.getElementById('disagreeBtn').addEventListener('click',function(){
+    document.getElementById('reasonBox').style.display='block';
+  });
+  document.getElementById('submitReason').addEventListener('click',function(){
+    logAction('disagree', document.getElementById('reasonText').value);
+    document.getElementById('reasonBox').style.display='none';
+  });
+})();
+{% endif %}
+</script>
+</body>
+</html>

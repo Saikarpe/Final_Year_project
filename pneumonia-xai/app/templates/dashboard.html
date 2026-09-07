@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Model Dashboard — PneumoScan AI</title>
+<meta name="description" content="Live evaluation metrics -- classification, explanation quality, conformal coverage -- for the PneumoScan AI pneumonia model." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+{% include '_style.html' %}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin:30px 0 34px}
+  .stat{padding:22px;position:relative;overflow:hidden;transition:.2s}
+  .stat:hover{transform:translateY(-4px);box-shadow:0 0 46px rgba(0,212,255,.28)}
+  .stat::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--cyan),transparent);box-shadow:0 0 14px var(--cyan)}
+  .stat span{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .stat b{display:block;margin-top:10px;font-size:32px;letter-spacing:-.03em;color:var(--cyan);
+    text-shadow:0 0 24px rgba(0,212,255,.6)}
+  .stat small{display:block;margin-top:4px;color:var(--muted);font-size:11.5px}
+  .tbl{padding:6px 6px;overflow:hidden;margin-bottom:34px}
+  .meta{color:var(--muted);font-size:12.5px;margin-bottom:26px}
+  .meta code{color:var(--cyan)}
+  @media(max-width:960px){.stats{grid-template-columns:1fr 1fr}}
+  @media(max-width:520px){.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="orbs" id="orbs"></div>
+{% include '_nav.html' %}
+
+<main class="wrap">
+  <h2 class="sec-title">Model Dashboard</h2>
+  <p class="sec-sub">Every number below is read live from <code>models/metrics.json</code>, written by <code>scripts/evaluate.py</code> -- nothing on this page is a literal.</p>
+
+  {% if not metrics %}
+  <div class="glass" style="padding:28px">
+    <p class="note na">Not yet evaluated. Run <code>python scripts/evaluate.py</code> (after <code>scripts/train.py</code>) to populate this dashboard.</p>
+  </div>
+  {% else %}
+  <p class="meta">Model: <code>{{ metrics.model_path }}</code> &middot; hash <code>{{ metrics.model_hash }}</code> &middot; evaluated <code>{{ metrics.generated_at }}</code></p>
+
+  <div class="stats">
+    <div class="glass stat"><span>AUROC</span><b>{{ '%.3f'|format(metrics.classification.auroc.auroc) }}</b>
+      <small>95% CI [{{ '%.3f'|format(metrics.classification.auroc.ci_lower) }}, {{ '%.3f'|format(metrics.classification.auroc.ci_upper) }}]</small></div>
+    <div class="glass stat"><span>Sensitivity</span><b>{{ '%.1f'|format(metrics.classification.sensitivity_specificity.sensitivity*100) }}%</b></div>
+    <div class="glass stat"><span>Specificity</span><b>{{ '%.1f'|format(metrics.classification.sensitivity_specificity.specificity*100) }}%</b></div>
+    <div class="glass stat"><span>Brier Score</span><b>{{ '%.3f'|format(metrics.classification.calibration.brier_score) }}</b>
+      <small>decision threshold {{ '%.3f'|format(metrics.classification.decision_threshold) }}</small></div>
+  </div>
+
+  <h3 class="sec-title" style="font-size:20px">Model Configuration</h3>
+  <p class="sec-sub">Architecture and training hyperparameters (configs/model.yaml).</p>
+  <div class="glass tbl">
+    <table>
+      <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+      <tbody>
+        {% for key, value in config.items() %}
+        <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="sec-title" style="font-size:20px">External Validation <span class="pill na">Not available</span></h3>
+  <p class="sec-sub">{{ metrics.classification.external_validation.reason }}</p>
+
+  <h3 class="sec-title" style="font-size:20px">Explanation Benchmark Matrix</h3>
+  <p class="sec-sub">Method &times; metric. {{ metrics.scope_note }}</p>
+  <div class="glass tbl">
+    <table>
+      <thead><tr><th>Method</th><th>Deletion AUC &darr;</th><th>Insertion AUC &uarr;</th><th>ROAD drop (approx.)</th>
+        <th>Max-sensitivity</th><th>Complexity</th><th>Runtime (mean, s)</th><th>Samples</th></tr></thead>
+      <tbody>
+        {% for name, row in metrics.explanation.items() %}
+        <tr>
+          <td>{{ method_info[name].label }}</td>
+          <td>{{ '%.3f'|format(row.deletion_auc_mean) if row.deletion_auc_mean is not none else '—' }}</td>
+          <td>{{ '%.3f'|format(row.insertion_auc_mean) if row.insertion_auc_mean is not none else '—' }}</td>
+          <td>{{ '%.3f'|format(row.road_mean_drop) if row.road_mean_drop is not none else '—' }}</td>
+          <td>{{ '%.3f'|format(row.max_sensitivity_mean) if row.max_sensitivity_mean is not none else '—' }}</td>
+          <td>{{ '%.2f'|format(row.complexity_mean) if row.complexity_mean is not none else '—' }}</td>
+          <td>{{ '%.3f'|format(metrics.runtime[name].mean_seconds) if metrics.runtime.get(name) else '—' }}</td>
+          <td>{{ row.n_samples }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="sec-title" style="font-size:20px">Localisation (mIoU) <span class="pill na">Not available</span></h3>
+  <p class="sec-sub">{{ metrics.localisation.reason }}</p>
+
+  <h3 class="sec-title" style="font-size:20px">Sanity Checks</h3>
+  <p class="sec-sub">Cascading-randomization similarity should fall toward zero as more of the network is randomized; label-randomization similarity should be low.</p>
+  <div class="glass tbl">
+    <table>
+      <thead><tr><th>Method</th><th>Stage</th><th>Similarity to original</th></tr></thead>
+      <tbody>
+        {% for method, data in metrics.sanity_checks.methods.items() %}
+          {% for stage in data.cascading_randomization.stages %}
+          <tr><td>{{ method_info[method].label }}</td><td>{{ stage.stage }}</td>
+            <td>{{ '%.3f'|format(stage.similarity_to_original) }}</td></tr>
+          {% endfor %}
+          <tr><td>{{ method_info[method].label }}</td><td>label randomization ({{ data.label_randomization.epochs }} epoch proxy)</td>
+            <td>{{ '%.3f'|format(data.label_randomization.similarity_to_original) }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="sec-title" style="font-size:20px">Conformal Coverage (U-4)</h3>
+  <p class="sec-sub">Empirical coverage on the test split at each calibrated target -- should track the diagonal within sampling error.</p>
+  <div class="plots">
+    <div class="glass plot"><h4>Coverage Plot</h4><img src="/static/plots/conformal_coverage.png" alt="Conformal coverage plot" /></div>
+    <div class="glass plot" style="overflow:auto">
+      <h4>Abstention Curve</h4>
+      <table>
+        <thead><tr><th>alpha</th><th>Target</th><th>Abstention rate</th><th>Accuracy (kept)</th></tr></thead>
+        <tbody>
+        {% for row in metrics.uncertainty.abstention_curve %}
+          <tr><td>{{ row.alpha }}</td><td>{{ '%.0f'|format(row.target_coverage*100) }}%</td>
+            <td>{{ '%.1f'|format(row.abstention_rate*100) }}%</td>
+            <td>{{ '%.1f'|format(row.accuracy_on_kept*100) if row.accuracy_on_kept is not none else '—' }}%</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3 class="sec-title" style="font-size:20px;margin-top:34px">Shortcut Audit (A-1)</h3>
+  {% if metrics.audits %}
+  <p class="sec-sub">Mean effect over {{ metrics.audits.shortcut_audit_summary.n_samples }} test images. Lung-field ratio uses an approximate geometric mask (no VinDr segmentation available).</p>
+  <div class="glass tbl">
+    <table>
+      <tbody>
+        <tr><td>Border masking (mean &Delta;proba)</td><td>{{ '%.3f'|format(metrics.audits.shortcut_audit_summary.border_masking_mean_delta) }}</td></tr>
+        <tr><td>Laterality-marker masking (mean &Delta;proba)</td><td>{{ '%.3f'|format(metrics.audits.shortcut_audit_summary.laterality_masking_mean_delta) }}</td></tr>
+        <tr><td>Blurred-source probe (mean &Delta;proba)</td><td>{{ '%.3f'|format(metrics.audits.shortcut_audit_summary.blurred_source_mean_delta) }}</td></tr>
+        <tr><td>Still confident after heavy blur</td><td>{{ '%.1f'|format(metrics.audits.shortcut_audit_summary.blurred_source_still_confident_rate*100) }}%</td></tr>
+        <tr><td>Attribution inside (approximate) lung field</td><td>{{ '%.1f'|format(metrics.audits.shortcut_audit_summary.attribution_in_lung_field_ratio_mean*100) }}%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="sec-sub">Subgroup performance (A-2): <span class="pill na">Not available</span> -- {{ metrics.audits.subgroup_performance.reason }}</p>
+  {% else %}
+  <p class="note na">Not yet run. Run <code>python scripts/audit.py</code> to populate this section.</p>
+  {% endif %}
+  {% endif %}
+</main>
+<p class="foot">PneumoScan AI &middot; For research and educational use only. Not a substitute for professional medical diagnosis.</p>
+<script>
+(function(){
+  var o=document.getElementById('orbs');
+  for(var i=0;i<26;i++){
+    var s=document.createElement('i'),d=2+Math.random()*4;
+    s.style.width=s.style.height=d+'px';
+    s.style.left=(Math.random()*100)+'%';
+    s.style.animationDuration=(12+Math.random()*18)+'s';
+    s.style.animationDelay=(-Math.random()*25)+'s';
+    if(i%4===0){s.style.background='#2ed573';s.style.boxShadow='0 0 12px 2px rgba(46,213,115,.5)';}
+    o.appendChild(s);
+  }
+})();
+</script>
+</body>
+</html>

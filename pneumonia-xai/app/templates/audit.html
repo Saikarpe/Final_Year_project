@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Audit Log — PneumoScan AI</title>
+<meta name="description" content="Append-only log of every inference and every clinician action -- EU AI Act Article 12 evidence." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+{% include '_style.html' %}
+  .tbl{padding:6px;overflow-x:auto;margin-bottom:34px}
+  code.small{font-size:11.5px;color:var(--muted)}
+  .evt{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid var(--line)}
+  .evt.inference{color:var(--cyan);border-color:rgba(0,212,255,.35)}
+  .evt.agree{color:var(--green);border-color:rgba(46,213,115,.35)}
+  .evt.disagree{color:var(--red);border-color:rgba(255,71,87,.35)}
+  .evt.abstain{color:var(--amber);border-color:rgba(255,176,32,.35)}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="orbs" id="orbs"></div>
+{% include '_nav.html' %}
+
+<main class="wrap">
+  <h2 class="sec-title">Audit Log</h2>
+  <p class="sec-sub">Append-only (enforced by SQLite triggers, not just convention) -- every inference and every
+    clinician action, in one table. This is the evidence base for EU AI Act Article 12; see
+    docs/eu_ai_act_mapping.md. <a href="/audit.csv" class="btn small" style="padding:8px 16px;font-size:13px">Export CSV</a></p>
+
+  <div class="glass tbl">
+    <table>
+      <thead><tr><th>#</th><th>Time (UTC)</th><th>Event</th><th>Case</th><th>Input hash</th><th>Model hash</th><th>Detail</th></tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.id }}</td>
+          <td><code class="small">{{ row.ts }}</code></td>
+          <td><span class="evt {{ 'agree' if 'agree' in row.event_type else 'disagree' if 'disagree' in row.event_type else 'abstain' if 'abstain' in row.event_type else 'inference' }}">{{ row.event_type }}</span></td>
+          <td><code class="small">{{ row.case_uid or '—' }}</code></td>
+          <td><code class="small">{{ row.input_hash or '—' }}</code></td>
+          <td><code class="small">{{ row.model_hash or '—' }}</code></td>
+          <td><code class="small">{{ row.payload }}</code></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7">No events logged yet -- run a prediction from the case reader.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</main>
+<p class="foot">PneumoScan AI &middot; For research and educational use only. Not a substitute for professional medical diagnosis.</p>
+<script>
+(function(){
+  var o=document.getElementById('orbs');
+  for(var i=0;i<26;i++){
+    var s=document.createElement('i'),d=2+Math.random()*4;
+    s.style.width=s.style.height=d+'px';
+    s.style.left=(Math.random()*100)+'%';
+    s.style.animationDuration=(12+Math.random()*18)+'s';
+    s.style.animationDelay=(-Math.random()*25)+'s';
+    if(i%4===0){s.style.background='#2ed573';s.style.boxShadow='0 0 12px 2px rgba(46,213,115,.5)';}
+    o.appendChild(s);
+  }
+})();
+</script>
+</body>
+</html>

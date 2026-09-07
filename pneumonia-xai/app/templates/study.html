@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Study Mode — PneumoScan AI</title>
+<meta name="description" content="Clinician study mode -- not available pending ethics approval and a frozen case set." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+{% include '_style.html' %}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="orbs" id="orbs"></div>
+{% include '_nav.html' %}
+
+<main class="wrap">
+  <h2 class="sec-title">Study Mode</h2>
+  <p class="sec-sub">Randomised, counterbalanced case presentation for the human-evaluation study (E-12&ndash;E-16).</p>
+
+  <div class="glass" style="padding:28px">
+    <span class="pill na">Not available</span>
+    <p class="note na" style="margin-top:14px">
+      This screen is intentionally not implemented against fabricated data. Two real prerequisites are
+      missing, and neither is something this codebase can produce on its own:
+    </p>
+    <ul style="color:var(--muted);line-height:1.8;font-size:14.5px">
+      <li><strong>P-1, IEC ethics approval</strong> &mdash; protocol, participant information sheet, consent
+        form, and data-handling statement, reviewed by an institutional ethics committee.</li>
+      <li><strong>D-6, a frozen study case set</strong> &mdash; 40&ndash;60 stratified cases (including the
+        ~25% deliberately-wrong subset) drawn from a source with radiologist-verified ground truth, which in
+        turn depends on D-2 (VinDr-CXR, credentialed access pending).</li>
+    </ul>
+    <p class="note" style="margin-top:14px">
+      When D-6 and P-1 land, this becomes a UI task, not a data-modelling one: <code>xai_cxr.auditlog</code>
+      already shows the pattern (one append-only SQLite table) that a <code>study_responses</code> table
+      would follow. See docs/decisions_log.md.
+    </p>
+  </div>
+</main>
+<p class="foot">PneumoScan AI &middot; For research and educational use only. Not a substitute for professional medical diagnosis.</p>
+<script>
+(function(){
+  var o=document.getElementById('orbs');
+  for(var i=0;i<26;i++){
+    var s=document.createElement('i'),d=2+Math.random()*4;
+    s.style.width=s.style.height=d+'px';
+    s.style.left=(Math.random()*100)+'%';
+    s.style.animationDuration=(12+Math.random()*18)+'s';
+    s.style.animationDelay=(-Math.random()*25)+'s';
+    if(i%4===0){s.style.background='#2ed573';s.style.boxShadow='0 0 12px 2px rgba(46,213,115,.5)';}
+    o.appendChild(s);
+  }
+})();
+</script>
+</body>
+</html>
