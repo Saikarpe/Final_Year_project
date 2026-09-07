@@ -1,0 +1,33 @@
+# Data (G-2). The Kermany corpus is redistributed by Kaggle/Mendeley, not by
+# this repo -- see README for the download step and docs/dataset_datasheet.md
+# for provenance/licence.
+dataset/
+__MACOSX/
+
+# Trained weights -- large binaries don't belong in git history. Regenerate
+# with `python scripts/train.py` (or the Makefile's `train` target).
+models/*.h5
+!models/.gitkeep
+
+# Runtime artefacts
+app/static/uploads/*
+!app/static/uploads/.gitkeep
+audit.db
+runs/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
