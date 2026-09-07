@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xai-cxr"
+version = "0.2.0"
+description = "Explainable chest X-ray pneumonia classification -- model, explanation registry, conformal prediction, evaluation suite."
+requires-python = ">=3.10,<3.12"
+dependencies = [
+    "tensorflow==2.13.0",
+    "numpy==1.26.2",
+    "scikit-learn==1.3.2",
+    "scipy",
+    "matplotlib",
+    "opencv-python==4.12.0.88",
+    "shap==0.51.0",
+    "flask==3.1.2",
+    "Pillow==11.3.0",
+    "PyYAML==6.0.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.1.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

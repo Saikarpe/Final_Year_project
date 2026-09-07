@@ -1,0 +1,11 @@
+tensorflow==2.13.0
+numpy==1.26.2
+scikit-learn==1.3.2
+scipy
+matplotlib
+opencv-python==4.12.0.88
+shap==0.51.0
+flask==3.1.2
+Pillow==11.3.0
+PyYAML==6.0.2
+pytest==9.1.1

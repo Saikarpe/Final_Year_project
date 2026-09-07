@@ -1,0 +1,26 @@
+name: CI
+
+# G-11 (stretch): catches the broken-repo problem automatically. Only the
+# tests that don't need a trained model or the (not-committed) dataset can
+# run here -- test_gradcam.py and test_splits.py cover the parts that are
+# self-contained; the rest skip themselves when their prerequisites are
+# missing (see each test module's skip condition).
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pneumonia-xai
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run tests
+        run: pytest tests/ -v
