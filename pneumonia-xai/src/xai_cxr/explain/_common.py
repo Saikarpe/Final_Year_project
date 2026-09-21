@@ -34,12 +34,26 @@ def as_batch(image: np.ndarray) -> np.ndarray:
     return image
 
 
-def colorize(heatmap: np.ndarray) -> np.ndarray:
-    """JET-colormapped heatmap with no blending -- used by the app so the
-    opacity slider can composite it over the original image client-side
-    (instant, no round-trip per slider move)."""
+def colorize(heatmap: np.ndarray, gamma: float = 0.8) -> np.ndarray:
+    """JET-colormapped heatmap as RGBA, for the app to composite client-side
+    (instant, no round-trip per opacity-slider move).
+
+    The alpha channel is the heatmap itself, and that is the point. Returning
+    opaque RGB meant JET's low end -- a saturated dark blue -- was painted over
+    every *un*attributed region at the slider's opacity, so the parts of the
+    radiograph the model ignored were the parts the clinician could no longer
+    see. An explanation overlay that hides the anatomy it is explaining is
+    worse than no overlay. With alpha tied to attribution, zero-attribution
+    areas are fully transparent and the image shows through untouched.
+
+    `gamma` < 1 lifts mid-range attributions so moderate evidence is still
+    visible rather than washing out; the colour channel is untouched, so the
+    hue at a given pixel still means exactly what the colour bar says.
+    """
     colored_bgr = cv2.applyColorMap(np.uint8(255 * heatmap), cv2.COLORMAP_JET)
-    return cv2.cvtColor(colored_bgr, cv2.COLOR_BGR2RGB)
+    colored_rgb = cv2.cvtColor(colored_bgr, cv2.COLOR_BGR2RGB)
+    alpha = np.uint8(255 * np.clip(heatmap, 0.0, 1.0) ** gamma)
+    return np.dstack([colored_rgb, alpha])
 
 
 def overlay(image_rgb: np.ndarray, heatmap: np.ndarray, alpha: float = 0.4) -> np.ndarray:

@@ -9,20 +9,45 @@ import numpy as np
 
 from ..config import ExplainConfig
 from ..models.baseline import XAIModel
-from . import gradcam, gradcampp, scorecam, integrated_gradients, occlusion, shap_method
+from . import attention, gradcam, gradcampp, scorecam, integrated_gradients, occlusion
+
+# SHAP is the only method with a heavy third-party dependency, and it is the
+# weakest performer in the benchmark matrix. Importing it at module scope made
+# `import xai_cxr.explain` fail outright when `shap` was missing -- which took
+# down evaluate.py, explain.py and audit.py entirely rather than costing one
+# method out of seven. Degrade to six methods and say so, once.
+try:
+    from . import shap_method
+    _SHAP_IMPORT_ERROR = None
+except ImportError as exc:  # pragma: no cover - environment-dependent
+    shap_method = None
+    _SHAP_IMPORT_ERROR = exc
+    import warnings
+    warnings.warn(
+        f'SHAP unavailable ({exc}); continuing with the other explanation methods. '
+        'Install `shap` to include it.', RuntimeWarning, stacklevel=2)
 
 METHODS = {
+    'attention': attention.explain,
     'gradcam': gradcam.explain,
     'gradcam++': gradcampp.explain,
     'scorecam': scorecam.explain,
     'integrated_gradients': integrated_gradients.explain,
     'occlusion': occlusion.explain,
-    'shap': shap_method.explain,
 }
+if shap_method is not None:
+    METHODS['shap'] = shap_method.explain
 
 # Kept honest and visible in the UI/eval-suite output — matches the spec's
 # per-method notes in §4 rather than presenting all six as interchangeable.
 METHOD_INFO = {
+    'attention': {
+        'label': 'Attention (head)',
+        'kind': 'intrinsic',
+        'notes': "Fastest -- one forward pass. The head's actual pooling weights, not a "
+                 'post-hoc reconstruction. Unsigned: shows what was pooled, not which way it pushed. '
+                 'Requires head: attention.',
+    },
     'gradcam': {
         'label': 'Grad-CAM',
         'kind': 'gradient',
@@ -56,6 +81,20 @@ METHOD_INFO = {
 }
 
 
+def available_methods(xai_model: XAIModel | None = None) -> list[str]:
+    """The methods a *given model* supports, in registry order.
+
+    'attention' only exists when the model was built with an attention-pooling
+    head, so anything that iterates the registry (the app's method selector,
+    the runtime timings in the eval suite) must filter through here rather
+    than assuming every registered method applies to every checkpoint.
+    """
+    names = [n for n in METHODS if n in METHOD_INFO]
+    if xai_model is not None and not attention.is_available(xai_model):
+        names.remove('attention')
+    return names
+
+
 def config_kwargs(cfg: ExplainConfig, method: str) -> dict:
     """The speed/quality knobs configs/explain.yaml controls for a given
     method. Every caller (evaluate.py, explain.py, the app) should route
@@ -63,13 +102,15 @@ def config_kwargs(cfg: ExplainConfig, method: str) -> dict:
     that hardcoding is exactly what made the original evaluate.py run take
     17+ hours on CPU (see docs/decisions_log.md)."""
     if method == 'occlusion':
-        return {'patch': cfg.occlusion_patch, 'stride': cfg.occlusion_stride}
+        return {'patch': cfg.occlusion_patch, 'stride': cfg.occlusion_stride,
+                'batch_size': cfg.inference_batch}
     if method == 'scorecam':
-        return {'batch_size': cfg.scorecam_batch, 'max_channels': cfg.scorecam_max_channels}
+        return {'batch_size': cfg.inference_batch, 'max_channels': cfg.scorecam_max_channels}
     if method == 'integrated_gradients':
-        return {'steps': cfg.ig_steps}
+        return {'steps': cfg.ig_steps, 'chunk_size': cfg.inference_batch}
     if method == 'shap':
-        return {'background_size': cfg.shap_background_size}
+        return {'background_size': cfg.shap_background_size,
+                'batch_size': cfg.inference_batch}
     return {}
 
 

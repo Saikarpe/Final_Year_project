@@ -1,8 +1,78 @@
-# Model configuration (G-4).
-architecture: vgg16_baseline
-learning_rate: 0.0001
-epochs: 15
-early_stopping_patience: 4
+# Model configuration (G-4). Change values here, never in code.
+#
+# M-1b: the backbone is a registry key (see src/xai_cxr/models/backbones.py),
+# not a hardcoded call. VGG16 (the previous default) is still selectable for
+# the like-for-like comparison in docs/model_card.md.
+#
+#   densenet121       7.0M conv params, CheXNet-standard  <- default
+#   efficientnetv2s  20.3M, best accuracy/FLOP here
+#   efficientnetv2b0  5.9M, smallest modern option (CPU)
+#   convnext_tiny    27.8M, strongest features, heaviest
+#   resnet50v2       23.6M
+#   vgg16            14.7M, legacy 2014 baseline
+
+backbone: densenet121
+
+# Grad-CAM target layer.
+#   auto   -> final feature map (7x7 at 224x224 for every modern backbone)
+#   hires  -> stride-16 stage   (14x14 at 224x224; coarser features, finer grid)
+#   <name> -> an explicit layer name
+cam_layer: auto
+
+# Input filter: a 3-parameter learnable window/level in front of the
+# backbone, identity-initialised (see src/xai_cxr/models/heads.py). Exposure
+# varies a lot across this corpus and nothing else in the pipeline normalises
+# it. Set false to reproduce the original graph exactly.
+window_layer: true
+
+# Pooling head.
+#   attention -- gated attention pooling; zero-initialised, so it starts out
+#                bit-for-bit identical to GAP and only departs if that helps.
+#                Pneumonia is focal, and GAP averages a 3-cell response
+#                against 46 cells of clear lung.
+#   avgmax    -- concat(global average, global max); cheaper middle ground
+#   gap       -- the plain global average the first version used
+head: attention
+attention_units: 128
+
+# Regularisation. spatial_dropout drops whole feature-map *channels*; ordinary
+# Dropout on a conv tensor barely regularises because neighbouring pixels are
+# correlated. head_batchnorm sits on the pooled vector and stabilises stage 2,
+# where unfreezing the backbone shifts the feature scale under the head.
+spatial_dropout: 0.1
+head_batchnorm: true
+
+# dense_units: 0 makes the classifier a pure linear probe (pool -> logit).
 dense_units: 256
-dropout: 0.5
-last_conv_layer: block5_conv3
+dropout: 0.4
+head_dropout: 0.2
+
+# Stage 1 -- head warmup with the backbone frozen. A high LR is safe here
+# because only the head is training.
+# LR scaled by sqrt(8/32) = 0.5 from the batch-32 value of 0.001, because
+# batch_size dropped to 8 to fit 320px in 4 GB. Leaving an LR tuned for 4x
+# larger batches would mean 4x more, noisier steps at an unchanged rate --
+# the classic way small-batch fine-tuning destabilises.
+learning_rate: 0.0005
+epochs: 8
+warmup_epochs: 0.5
+
+# Stage 2 -- fine-tune the top of the backbone. This is the step the old
+# frozen-VGG16 model never had, and it is where most of the accuracy and most
+# of the Grad-CAM sharpness come from. finetune_epochs: 0 skips it.
+finetune_epochs: 12
+finetune_learning_rate: 0.000005
+unfreeze_fraction: 0.60
+freeze_batchnorm: true
+
+# Optimisation. AdamW (decoupled weight decay) + warmup-cosine.
+weight_decay: 0.0001
+label_smoothing: 0.05
+focal_gamma: 0.0        # > 0 switches BCE to focal BCE
+early_stopping_patience: 3
+
+# Operating point saved into models/metrics.json by scripts/train.py.
+#   youden          -- maximises TPR - FPR (equal cost either way)
+#   min_sensitivity -- lowest FPR that still reaches min_sensitivity
+threshold_policy: youden
+min_sensitivity: 0.95

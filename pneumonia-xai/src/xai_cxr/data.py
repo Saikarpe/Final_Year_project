@@ -138,16 +138,64 @@ def manifest_patient_ids(name: str, splits_dir: str = SPLITS_DIR) -> set[str]:
 
 def load_image(path: str, img_size: tuple[int, int]) -> np.ndarray:
     """Canonical image loader. Returns raw RGB float32 in [0, 255] — the
-    model itself applies VGG16 preprocessing (see models/baseline.py), so
+    model itself applies the backbone family's preprocessing (see the
+    Preprocess layer in models/baseline.py), so
     every caller (training, evaluation, explanation methods, the app) reads
     images the same way, once."""
     img = tf.keras.utils.load_img(path, target_size=img_size)
     return tf.keras.utils.img_to_array(img).astype('float32')
 
 
+def build_augmenter(cfg: DataConfig | None = None) -> tf.keras.Sequential | None:
+    """The training-time augmentation stack, built from configs/data.yaml.
+
+    The original pipeline was RandomFlip('horizontal') + RandomRotation(0.05)
+    and nothing else, which is both too weak (nothing varies exposure, and a
+    frozen backbone on ~4k images overfits fast) and, in the flip's case,
+    actively wrong for radiographs -- a mirrored chest X-ray has the heart in
+    the wrong hemithorax and the laterality marker on the wrong side, which is
+    the same shortcut the A-1 audit is trying to detect. Flipping is therefore
+    opt-in via `augment.horizontal_flip`.
+
+    Returns None when every strength is 0, so the caller can skip the map()
+    entirely rather than paying for an identity transform.
+    """
+    cfg = cfg or DataConfig.load()
+    a = cfg.augment
+    layers = []
+    if a.get('horizontal_flip'):
+        layers.append(tf.keras.layers.RandomFlip('horizontal', seed=cfg.seed))
+    if a.get('rotation'):
+        layers.append(tf.keras.layers.RandomRotation(
+            a['rotation'], fill_mode='constant', fill_value=0.0, seed=cfg.seed))
+    if a.get('zoom'):
+        layers.append(tf.keras.layers.RandomZoom(
+            a['zoom'], a['zoom'], fill_mode='constant', fill_value=0.0, seed=cfg.seed))
+    if a.get('translation'):
+        layers.append(tf.keras.layers.RandomTranslation(
+            a['translation'], a['translation'], fill_mode='constant', fill_value=0.0, seed=cfg.seed))
+    # Contrast/brightness stand in for the exposure and windowing variation
+    # between the machines and techs that produced this corpus -- the most
+    # clinically realistic axis of variation the JPEGs still carry.
+    if a.get('contrast'):
+        layers.append(tf.keras.layers.RandomContrast(a['contrast'], seed=cfg.seed))
+    if a.get('brightness'):
+        layers.append(tf.keras.layers.RandomBrightness(
+            a['brightness'], value_range=(0.0, 255.0), seed=cfg.seed))
+    if not layers:
+        return None
+    return tf.keras.Sequential(layers, name='augment')
+
+
 def load_split_dataset(name: str, cfg: DataConfig | None = None,
                         shuffle: bool = False, augment: bool = False) -> tuple[tf.data.Dataset, np.ndarray]:
-    """Returns (tf.data.Dataset yielding (image[0,255], label), labels array)."""
+    """Returns (tf.data.Dataset yielding (image[0,255], label), labels array).
+
+    The dataset is *not* shuffled when `shuffle=False`, and the returned
+    `labels` array is in manifest order -- evaluation and threshold tuning
+    both zip model.predict() output against it positionally, so that ordering
+    guarantee is load-bearing, not incidental.
+    """
     cfg = cfg or DataConfig.load()
     rows = read_manifest(name)
     paths = [os.path.join(cfg.dataset_dir, r) for r, _ in rows]
@@ -157,20 +205,36 @@ def load_split_dataset(name: str, cfg: DataConfig | None = None,
         img = tf.io.read_file(path)
         img = tf.image.decode_jpeg(img, channels=3)
         img = tf.image.resize(img, cfg.img_size)
-        return img, label
+        # uint8, not float32, purely so the cache below is 4x smaller: at
+        # 320x320 the train split is 1.3 GB cached as uint8 and 5.1 GB as
+        # float32. The source JPEGs are 8-bit anyway, so the only loss is
+        # re-quantising the resize interpolation -- under 0.2% of range, far
+        # below the JPEG artefacts already present.
+        return tf.cast(tf.clip_by_value(img, 0.0, 255.0), tf.uint8), label
 
     ds = tf.data.Dataset.from_tensor_slices((paths, labels))
+    ds = ds.map(_load, num_parallel_calls=tf.data.AUTOTUNE)
+
+    # Decode + resize ONCE for the whole run, not once per epoch. Measured on
+    # the M1200: without this, training ran at 3.25 s/step against a 1.05
+    # s/step compute cost -- the GPU sat at ~50% waiting on JPEG decoding, and
+    # the run projected to 12.7 h instead of ~4 h. Cache before shuffle, so
+    # each epoch still sees a fresh order rather than one frozen permutation.
+    ds = ds.cache()
+
     if shuffle:
         ds = ds.shuffle(buffer_size=len(paths), seed=cfg.seed, reshuffle_each_iteration=True)
-    ds = ds.map(_load, num_parallel_calls=tf.data.AUTOTUNE)
+    ds = ds.batch(cfg.batch_size)
+    ds = ds.map(lambda x, y: (tf.cast(x, tf.float32), y),
+                num_parallel_calls=tf.data.AUTOTUNE)
     if augment:
-        aug = tf.keras.Sequential([
-            tf.keras.layers.RandomFlip('horizontal'),
-            tf.keras.layers.RandomRotation(0.05),
-        ])
-        ds = ds.map(lambda x, y: (aug(x, training=True), y), num_parallel_calls=tf.data.AUTOTUNE)
-    ds = ds.batch(cfg.batch_size).prefetch(tf.data.AUTOTUNE)
-    return ds, labels
+        aug = build_augmenter(cfg)
+        if aug is not None:
+            # Augment after batching: the Random* layers vectorise over the
+            # batch axis, which is several times faster than per-example.
+            ds = ds.map(lambda x, y: (tf.clip_by_value(aug(x, training=True), 0.0, 255.0), y),
+                        num_parallel_calls=tf.data.AUTOTUNE)
+    return ds.prefetch(tf.data.AUTOTUNE), labels
 
 
 def class_weights(labels: np.ndarray) -> dict[int, float]:

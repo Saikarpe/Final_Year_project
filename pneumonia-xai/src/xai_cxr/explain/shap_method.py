@@ -17,7 +17,9 @@ from ..data import read_manifest, load_image
 from ..models.baseline import XAIModel
 from ._common import as_batch, normalize, resize_to
 
-_explainer_cache: dict[int, shap.GradientExplainer] = {}
+#: Keyed by (model identity, background size, batch size) -- the cache must
+#: not hand back an explainer built with a different background or batch size.
+_explainer_cache: dict[tuple, shap.GradientExplainer] = {}
 
 
 def _background(cfg: DataConfig, size: int) -> np.ndarray:
@@ -27,19 +29,30 @@ def _background(cfg: DataConfig, size: int) -> np.ndarray:
     return np.array([load_image(os.path.join(cfg.dataset_dir, r), cfg.img_size) for r, _ in rows])
 
 
-def _get_explainer(xai_model: XAIModel, background_size: int) -> shap.GradientExplainer:
-    key = id(xai_model)
+def _get_explainer(xai_model: XAIModel, background_size: int,
+                   batch_size: int) -> shap.GradientExplainer:
+    key = (id(xai_model), background_size, batch_size)
     if key not in _explainer_cache:
         cfg = DataConfig.load()
         bg = _background(cfg, background_size)
-        _explainer_cache[key] = shap.GradientExplainer(xai_model.model, bg)
+        # batch_size defaults to 50 inside shap, i.e. 50 images of
+        # img_size pushed through the model at once. At 320x320 that asks
+        # cuDNN for a convolution workspace far beyond a 4 GB card, and the
+        # failure surfaces as `NotFoundError: No algorithm worked!` -- which
+        # reads like a missing kernel but is really RESOURCE_EXHAUSTED from
+        # every cuDNN engine in turn. Driving it from configs/explain.yaml's
+        # inference_batch keeps SHAP on the same VRAM budget as Occlusion and
+        # Score-CAM. It changes only how the work is batched, never the
+        # Shapley estimate -- unlike lowering `nsamples`, which would.
+        _explainer_cache[key] = shap.GradientExplainer(
+            xai_model.model, bg, batch_size=batch_size)
     return _explainer_cache[key]
 
 
 def explain(xai_model: XAIModel, image: np.ndarray, img_size: tuple[int, int] = (224, 224),
-            background_size: int = 10) -> np.ndarray:
+            background_size: int = 10, batch_size: int = 4) -> np.ndarray:
     images = as_batch(image)
-    explainer = _get_explainer(xai_model, background_size)
+    explainer = _get_explainer(xai_model, background_size, batch_size)
     shap_values = explainer.shap_values(images)
     sv = shap_values[0] if isinstance(shap_values, list) else shap_values
     single = sv[0]  # (H, W, C) for older shap versions, (H, W, C, n_outputs) for newer ones

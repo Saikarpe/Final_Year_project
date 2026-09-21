@@ -24,9 +24,15 @@ def _note(true_label: str, pred_label: str, proba: float) -> str:
 
 
 def build_failure_gallery(xai_model: XAIModel, cfg: DataConfig | None = None, split: str = 'test',
-                           method: str = 'gradcam', n: int = 10, threshold: float = 0.5,
+                           method: str = 'gradcam', n: int = 10, threshold: float | None = None,
                            out_dir: str = GALLERY_IMAGE_DIR, docs_path: str | None = None) -> str:
     cfg = cfg or DataConfig.load()
+    # None means "use the operating point the app actually runs at", not 0.5.
+    # A gallery built at 0.5 while the tuned threshold is ~0.22 is a gallery
+    # of a model nobody deployed.
+    if threshold is None:
+        from ..models.baseline import load_threshold
+        threshold = load_threshold()
     os.makedirs(out_dir, exist_ok=True)
     rows = read_manifest(split)
 

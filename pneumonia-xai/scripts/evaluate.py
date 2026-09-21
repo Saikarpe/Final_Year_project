@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 from xai_cxr.config import DataConfig, ModelConfig, metrics_path
 from xai_cxr.data import load_split_dataset, read_manifest, load_image
 from xai_cxr.models.baseline import XAIModel, load_trained, load_threshold
-from xai_cxr.explain.registry import METHODS, explain as registry_explain
+from xai_cxr.explain.registry import METHODS, available_methods, explain as registry_explain
 from xai_cxr.evaluation.metrics import bootstrap_auroc_ci, sensitivity_specificity, calibration_and_brier
 from xai_cxr.evaluation.faithfulness import deletion_insertion_auc, road_score
 from xai_cxr.evaluation.robustness import robustness_and_complexity
@@ -43,13 +43,27 @@ from xai_cxr import tracking
 # without finishing. configs/explain.yaml now caps occlusion/scorecam/shap
 # cost directly (see xai_cxr.explain.registry.config_kwargs); these sample
 # sizes are a second, independent lever on top of that. See decisions_log.md.
-FAST_METHODS = ['gradcam', 'gradcam++', 'integrated_gradients']
+# 'attention' is in FAST_METHODS because it is a single forward pass -- it is
+# cheaper than Grad-CAM, and it is exactly the method whose faithfulness we
+# should NOT take on trust just because it comes from inside the head.
+# available_methods() drops it automatically on a checkpoint with a gap/avgmax
+# head, so this list stays valid across configs.
+FAST_METHODS = ['attention', 'gradcam', 'gradcam++', 'integrated_gradients']
 SLOW_METHODS = ['scorecam', 'occlusion', 'shap']
 FAST_SAMPLE_N = 12
 SLOW_SAMPLE_N = 4
 SANITY_CHECK_METHODS = ['gradcam', 'integrated_gradients']
 LABEL_RAND_N = 60
 LABEL_RAND_EPOCHS = 1
+
+
+def _join(names: list[str]) -> str:
+    """'a, b and c' -- the scope note is shown to a reader, not logged."""
+    if not names:
+        return 'no methods'
+    if len(names) == 1:
+        return names[0]
+    return ', '.join(names[:-1]) + ' and ' + names[-1]
 
 
 def _mean_of(dicts: list[dict], key: str) -> float:
@@ -133,8 +147,12 @@ def main():
 
     print('\n=== Explanation quality (E-7 faithfulness/ROAD, E-9 robustness) ===', flush=True)
     explanation = {}
-    for method in FAST_METHODS + SLOW_METHODS:
-        n = FAST_SAMPLE_N if method in FAST_METHODS else SLOW_SAMPLE_N
+    supported = available_methods(xai_model)
+    fast_methods = [m for m in FAST_METHODS if m in supported]
+    slow_methods = [m for m in SLOW_METHODS if m in supported]
+
+    for method in fast_methods + slow_methods:
+        n = FAST_SAMPLE_N if method in fast_methods else SLOW_SAMPLE_N
         rows = _sample_rows(data_cfg, n)
         t_method_start = time.time()
         faith_rows, road_rows, robust_rows = [], [], []
@@ -143,7 +161,7 @@ def main():
             heatmap = registry_explain(method, xai_model, img, img_size=data_cfg.img_size)
             faith_rows.append(deletion_insertion_auc(xai_model, img, heatmap))
             road_rows.append(road_score(xai_model, img, heatmap))
-            if method in FAST_METHODS:
+            if method in fast_methods:
                 robust_rows.append(robustness_and_complexity(xai_model, img, method, img_size=data_cfg.img_size))
             print(f'  {method}: {i + 1}/{len(rows)} ({time.time() - t_method_start:.0f}s elapsed)', flush=True)
 
@@ -166,7 +184,7 @@ def main():
     ])
 
     sanity = {'image': sanity_image_relpath, 'methods': {}}
-    for method in SANITY_CHECK_METHODS:
+    for method in [m for m in SANITY_CHECK_METHODS if m in supported]:
         t0 = time.time()
         cascade = cascading_randomization_test(xai_model, sanity_image, method, img_size=data_cfg.img_size)
         print(f'  {method}: cascading randomization done ({time.time() - t0:.0f}s)', flush=True)
@@ -179,7 +197,8 @@ def main():
     print('\n=== Runtime per explanation (E-11) ===', flush=True)
     timing_image, _ = _sample_rows(data_cfg, 1, seed=3)[0]
     timing_image = load_image(os.path.join(data_cfg.dataset_dir, timing_image), data_cfg.img_size)
-    runtime = time_methods(xai_model, timing_image, img_size=data_cfg.img_size, n_repeats=2)
+    runtime = time_methods(xai_model, timing_image, img_size=data_cfg.img_size,
+                           methods=supported, n_repeats=2)
 
     metrics = {
         'generated_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
@@ -194,11 +213,14 @@ def main():
             'status': 'not_available',
             'reason': 'Needs D-2 (VinDr-CXR boxes) -- deferred, see docs/decisions_log.md',
         },
+        # Rendered straight onto the dashboard, so it is prose, not a repr:
+        # "['gradcam', 'gradcam++']" is not something to show a reader.
         'scope_note': (
-            f'Faithfulness/ROAD computed on {FAST_SAMPLE_N} test images for {FAST_METHODS} '
-            f'and {SLOW_SAMPLE_N} for {SLOW_METHODS} (cost-scoped, see scripts/evaluate.py). '
-            f'Robustness/complexity computed only for {FAST_METHODS}. '
-            f'Sanity checks (cascading + label randomization) computed only for {SANITY_CHECK_METHODS}.'
+            f'Faithfulness/ROAD computed on {FAST_SAMPLE_N} test images for '
+            f'{_join(fast_methods)} and {SLOW_SAMPLE_N} for {_join(slow_methods)} '
+            f'(cost-scoped, see scripts/evaluate.py). Robustness/complexity computed only for '
+            f'{_join(fast_methods)}. Sanity checks (cascading + label randomization) computed '
+            f'only for {_join([m for m in SANITY_CHECK_METHODS if m in supported])}.'
         ),
     }
 

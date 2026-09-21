@@ -1,7 +1,17 @@
 # Data configuration (G-4). Change values here, never in code.
+#
+# img_size 320 (not 224): measured on the Quadro M1200 (4 GB). 320px doubles
+# the pixel count and takes the DenseNet121 CAM grid from 7x7 to 10x10, which
+# is a direct win for explanation localisation -- the thing this project is
+# actually about. Cost: 4.31 h vs 1.93 h for 224px.
+#
+# batch_size 8 (not 32): 320px at batch 12 or 16 OOMs on 4 GB, and so does
+# 224px at batch 32. Batch, not resolution, is the binding constraint here --
+# DenseNet's concatenation-heavy activations scale harshly with batch -- which
+# is precisely why 320px is affordable at all. See docs/decisions_log.md.
 dataset_dir: dataset/chest_xray
-img_size: [224, 224]
-batch_size: 32
+img_size: [320, 320]
+batch_size: 8
 seed: 42
 # Patient-level split ratios. Must sum to 1.0. "calibration" feeds the
 # conformal predictor (U-1) and must never be touched during training.
@@ -10,3 +20,16 @@ split_ratios:
   val: 0.10
   calibration: 0.10
   test: 0.10
+
+# Augmentation strengths (D-8). 0 disables a transform.
+#
+# horizontal_flip is false on purpose: mirroring a chest radiograph moves the
+# heart to the right hemithorax and flips the laterality marker -- the exact
+# shortcut the A-1 audit measures. The previous pipeline flipped by default.
+augment:
+  horizontal_flip: false
+  rotation: 0.05        # fraction of 2*pi
+  zoom: 0.10
+  translation: 0.05     # fraction of height/width
+  contrast: 0.15
+  brightness: 0.10

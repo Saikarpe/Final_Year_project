@@ -8,9 +8,21 @@
 # (still occludes/samples enough of the image to be meaningful) while being
 # tractable without a GPU. See docs/decisions_log.md.
 default_method: gradcam
-occlusion_patch: 32
-occlusion_stride: 16
+
+# Occluder geometry scaled with img_size 224 -> 320 (x1.43), so the occluded
+# patch stays the same fraction of the image and the position count stays ~196
+# rather than jumping to 400. Keeps the method's character and its runtime
+# comparable to the archived 224px baseline.
+occlusion_patch: 46
+occlusion_stride: 23
+
 ig_steps: 16
-scorecam_batch: 16
 scorecam_max_channels: 64
 shap_background_size: 5
+
+# Peak-memory knob for every perturbation-style method (Occlusion, Score-CAM,
+# and IG's interpolation chunks). Purely a VRAM constraint: it changes how
+# many forward passes are batched together, never the result. 4 fits 320px on
+# a 4 GB card; raise it on a bigger GPU for speed.
+inference_batch: 4
+scorecam_batch: 16      # superseded by inference_batch; kept so old configs load

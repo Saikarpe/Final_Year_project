@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 
 from xai_cxr.config import DataConfig, ModelConfig, MODELS_DIR
 from xai_cxr.data import read_manifest, load_image
-from xai_cxr.models.baseline import XAIModel, load_trained
-from xai_cxr.explain.registry import METHODS, METHOD_INFO, explain as registry_explain
+from xai_cxr.models.baseline import XAIModel, load_threshold, load_trained
+from xai_cxr.explain.registry import METHOD_INFO, available_methods, explain as registry_explain
 from xai_cxr.explain._common import overlay
 
 if __name__ == '__main__':
@@ -26,19 +26,26 @@ if __name__ == '__main__':
     model = load_trained(model_cfg.model_path)
     xai_model = XAIModel(model, model_cfg.last_conv_layer)
 
+    threshold = load_threshold()
+
     rows = read_manifest('test')
     sample = {
         'NORMAL': next(r for r, l in rows if l == 'NORMAL'),
         'PNEUMONIA': next(r for r, l in rows if l == 'PNEUMONIA'),
     }
 
-    method_names = list(METHODS)
+    # available_methods, not list(METHODS): 'attention' only exists on a
+    # checkpoint trained with an attention-pooling head.
+    method_names = available_methods(xai_model)
     fig, axes = plt.subplots(2, len(method_names) + 1, figsize=(3 * (len(method_names) + 1), 6))
 
     for row, (label, relpath) in enumerate(sample.items()):
         img = load_image(os.path.join(data_cfg.dataset_dir, relpath), data_cfg.img_size)
         proba = float(xai_model.proba(img[None])[0])
-        pred = 'PNEUMONIA' if proba > 0.5 else 'NORMAL'
+        # The tuned operating point, not 0.5 -- this figure goes in the
+        # report, and labelling a 0.3 case "NORMAL" here while the app calls
+        # it PNEUMONIA would be a genuine inconsistency.
+        pred = 'PNEUMONIA' if proba > threshold else 'NORMAL'
 
         axes[row, 0].imshow(img.astype('uint8'))
         axes[row, 0].set_title(f'{label}\npred={pred} ({proba:.2f})', fontsize=9)

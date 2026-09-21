@@ -182,6 +182,7 @@ train/NORMAL/NORMAL2-IM-1326-0001.jpeg	NORMAL
 train/NORMAL/NORMAL2-IM-1329-0001.jpeg	NORMAL
 train/NORMAL/NORMAL2-IM-1348-0001.jpeg	NORMAL
 train/NORMAL/NORMAL2-IM-1385-0001.jpeg	NORMAL
+train/NORMAL/NORMAL2-IM-1442-0001.jpeg	NORMAL
 train/PNEUMONIA/person1001_bacteria_2932.jpeg	PNEUMONIA
 train/PNEUMONIA/person1012_bacteria_2943.jpeg	PNEUMONIA
 train/PNEUMONIA/person1014_bacteria_2945.jpeg	PNEUMONIA
@@ -345,6 +346,7 @@ train/PNEUMONIA/person1906_bacteria_4803.jpeg	PNEUMONIA
 train/PNEUMONIA/person1911_bacteria_4815.jpeg	PNEUMONIA
 train/PNEUMONIA/person1932_bacteria_4843.jpeg	PNEUMONIA
 train/PNEUMONIA/person1934_bacteria_4846.jpeg	PNEUMONIA
+train/PNEUMONIA/person1949_bacteria_4880.jpeg	PNEUMONIA
 train/PNEUMONIA/person24_bacteria_108.jpeg	PNEUMONIA
 train/PNEUMONIA/person24_bacteria_109.jpeg	PNEUMONIA
 train/PNEUMONIA/person24_bacteria_110.jpeg	PNEUMONIA
@@ -587,5 +589,3 @@ train/PNEUMONIA/person97_virus_181.jpeg	PNEUMONIA
 train/PNEUMONIA/person985_bacteria_2912.jpeg	PNEUMONIA
 train/PNEUMONIA/person997_bacteria_2926.jpeg	PNEUMONIA
 train/PNEUMONIA/person997_virus_1678.jpeg	PNEUMONIA
-val/NORMAL/NORMAL2-IM-1442-0001.jpeg	NORMAL
-val/PNEUMONIA/person1949_bacteria_4880.jpeg	PNEUMONIA

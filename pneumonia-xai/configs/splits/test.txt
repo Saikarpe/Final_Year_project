@@ -334,6 +334,7 @@ train/PNEUMONIA/person1917_bacteria_4823.jpeg	PNEUMONIA
 train/PNEUMONIA/person1937_bacteria_4853.jpeg	PNEUMONIA
 train/PNEUMONIA/person1942_bacteria_4865.jpeg	PNEUMONIA
 train/PNEUMONIA/person1945_bacteria_4872.jpeg	PNEUMONIA
+train/PNEUMONIA/person1954_bacteria_4886.jpeg	PNEUMONIA
 train/PNEUMONIA/person253_bacteria_1152.jpeg	PNEUMONIA
 train/PNEUMONIA/person253_bacteria_1153.jpeg	PNEUMONIA
 train/PNEUMONIA/person253_bacteria_1154.jpeg	PNEUMONIA
@@ -579,4 +580,3 @@ train/PNEUMONIA/person96_virus_179.jpeg	PNEUMONIA
 train/PNEUMONIA/person975_virus_1650.jpeg	PNEUMONIA
 train/PNEUMONIA/person996_bacteria_2924.jpeg	PNEUMONIA
 train/PNEUMONIA/person996_virus_1677.jpeg	PNEUMONIA
-val/PNEUMONIA/person1954_bacteria_4886.jpeg	PNEUMONIA

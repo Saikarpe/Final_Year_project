@@ -1,46 +1,140 @@
-"""G-7: every Flask route returns 200. Skipped until models/pneumonia_model.h5
-has been trained with the M-1 architecture (i.e. after scripts/train.py has
-completed at least one checkpoint) -- app/app.py loads the model at import
-time, so there's no way to test the routes without a compatible model file
-on disk.
+"""G-7: every Flask route renders.
+
+This used to skip itself entirely unless models/pneumonia_model.h5 already
+existed, because app.py loaded the model at import time and crashed without
+one -- which meant the route tests never ran in CI, on a fresh clone, or
+before the first training run. app.py now loads lazily and renders a "model
+not loaded" state instead, so the pages are testable with no checkpoint at
+all, which is exactly the state a new contributor's repo is in.
+
+The prediction path itself still needs a model, so those tests build a small
+randomly-initialised one into tmp_path. It predicts nonsense, which is fine:
+what is under test is the request/response contract, not the diagnosis.
 """
 import importlib
+import io
 import os
 import sys
 
+import numpy as np
 import pytest
+from PIL import Image
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'app'))
 
-from xai_cxr.config import ModelConfig
-
-model_cfg = ModelConfig.load()
-
-
-def _model_is_ready() -> bool:
-    if not os.path.exists(model_cfg.model_path):
-        return False
-    try:
-        import tensorflow as tf
-        m = tf.keras.models.load_model(model_cfg.model_path, compile=False)
-        return 'gap' in [l.name for l in m.layers]
-    except Exception:
-        return False
-
-
-pytestmark = pytest.mark.skipif(not _model_is_ready(),
-                                 reason='models/pneumonia_model.h5 not trained with the M-1 architecture yet')
+PAGES = ['/', '/dashboard', '/dataset', '/audit', '/study']
 
 
 @pytest.fixture(scope='module')
-def client():
-    app_module = importlib.import_module('app')
-    app_module.app.config['TESTING'] = True
+def app_module():
+    module = importlib.import_module('app')
+    module.app.config['TESTING'] = True
+    return module
+
+
+@pytest.fixture(scope='module')
+def client(app_module):
     with app_module.app.test_client() as c:
         yield c
 
 
-@pytest.mark.parametrize('route', ['/', '/dashboard', '/dataset', '/audit', '/study'])
-def test_route_returns_200(client, route):
-    resp = client.get(route)
+@pytest.fixture(scope='module')
+def trained_client(app_module, tmp_path_factory):
+    """A client whose checkpoint exists but is untrained."""
+    from xai_cxr.config import ModelConfig
+    from xai_cxr.models.baseline import build_model
+
+    path = str(tmp_path_factory.mktemp('model') / 'pneumonia_model.h5')
+    build_model(ModelConfig.load(), weights=None, compile_model=False).save(path)
+
+    original = app_module.model_cfg.model_path
+    original_state = dict(app_module._state)
+    app_module.model_cfg.model_path = path
+    app_module._state.update({'model': None, 'xai': None, 'hash': None, 'error': None})
+    with app_module.app.test_client() as c:
+        yield c
+    app_module.model_cfg.model_path = original
+    app_module._state.update(original_state)
+
+
+def _jpeg(size=(300, 300)) -> io.BytesIO:
+    buf = io.BytesIO()
+    rng = np.random.RandomState(0)
+    Image.fromarray(rng.randint(0, 255, (*size, 3), dtype='uint8')).save(buf, 'JPEG')
+    buf.seek(0)
+    return buf
+
+
+@pytest.mark.parametrize('route', PAGES)
+def test_page_renders_without_a_trained_model(client, route):
+    assert client.get(route).status_code == 200
+
+
+def test_healthz_reports_the_model_state(client):
+    payload = client.get('/healthz').get_json()
+    assert 'ok' in payload and 'backbone' in payload
+
+
+def test_audit_csv_downloads(client):
+    resp = client.get('/audit.csv')
     assert resp.status_code == 200
+    assert 'attachment' in resp.headers['Content-Disposition']
+
+
+@pytest.mark.parametrize('route', PAGES)
+def test_page_renders_with_a_model(trained_client, route):
+    assert trained_client.get(route).status_code == 200
+
+
+def test_predict_returns_a_calibrated_result(trained_client):
+    data = trained_client.post('/api/predict', data={'xray': (_jpeg(), 'case.jpg')},
+                               content_type='multipart/form-data').get_json()
+    assert data['label'] in ('NORMAL', 'PNEUMONIA')
+    assert 0.0 <= data['proba'] <= 1.0
+    # The operating point travels with the result: the UI cannot render the
+    # probability meaningfully without the threshold it is compared against.
+    assert 0.0 < data['threshold'] < 1.0
+    assert len(data['cam_grid']) == 2
+
+
+def test_explain_endpoint_serves_each_supported_method(trained_client, app_module):
+    uid = trained_client.post('/api/predict', data={'xray': (_jpeg(), 'case.jpg')},
+                              content_type='multipart/form-data').get_json()['uid']
+    # The fast ones only -- occlusion and SHAP are minutes per call by design.
+    for method in ('attention', 'gradcam', 'gradcam++'):
+        resp = trained_client.get(f'/explain/{uid}/{method}')
+        assert resp.status_code == 200, method
+        assert resp.get_json()['url'].endswith('.png')
+
+
+def test_explain_rejects_unknown_methods_and_uids(trained_client):
+    uid = 'a' * 32
+    assert trained_client.get(f'/explain/{uid}/not_a_method').status_code == 400
+    assert trained_client.get(f'/explain/{uid}/gradcam').status_code == 404
+    # A uid is a uuid4 hex string and nothing else -- a path-shaped one must
+    # not reach the filesystem.
+    assert trained_client.get('/explain/..%2f..%2fsecrets/gradcam').status_code in (400, 404)
+
+
+@pytest.mark.parametrize('payload,label', [
+    (b'this is not an image', 'undecodable'),
+    (b'', 'empty'),
+])
+def test_predict_rejects_bad_uploads(trained_client, payload, label):
+    """The 10 MB / JPG-PNG limit the upload panel advertises is enforced, not
+    decorative."""
+    resp = trained_client.post('/api/predict', data={'xray': (io.BytesIO(payload), 'x.jpg')},
+                               content_type='multipart/form-data')
+    assert resp.status_code == 400, label
+    assert 'error' in resp.get_json()
+
+
+def test_predict_rejects_oversized_uploads(trained_client):
+    big = io.BytesIO(b'0' * (11 * 1024 * 1024))
+    resp = trained_client.post('/api/predict', data={'xray': (big, 'x.jpg')},
+                               content_type='multipart/form-data')
+    assert resp.status_code == 413
+
+
+def test_predict_without_a_file_is_a_client_error(trained_client):
+    assert trained_client.post('/api/predict').status_code == 400

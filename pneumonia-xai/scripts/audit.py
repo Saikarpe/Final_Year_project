@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from xai_cxr.config import DataConfig, ModelConfig, metrics_path
 from xai_cxr.data import load_image, read_manifest
-from xai_cxr.models.baseline import XAIModel, load_trained
+from xai_cxr.models.baseline import XAIModel, load_threshold, load_trained
 from xai_cxr.audits.shortcut_audit import run_shortcut_audit
 from xai_cxr.audits.failure_gallery import build_failure_gallery
 
@@ -85,5 +85,10 @@ if __name__ == '__main__':
     print(json.dumps(summary, indent=2))
 
     print('\nBuilding failure gallery (A-3)...')
-    docs_path = build_failure_gallery(xai_model, data_cfg, split='test', method='gradcam', n=10)
+    # The tuned operating point, not the 0.5 default. With a threshold of
+    # ~0.22, judging failures at 0.5 puts cases in the gallery that the app
+    # never got wrong, and omits ones it did -- an audit of a model nobody
+    # runs.
+    docs_path = build_failure_gallery(xai_model, data_cfg, split='test', method='gradcam', n=10,
+                                      threshold=load_threshold())
     print(f'Failure gallery written -> {docs_path}')
