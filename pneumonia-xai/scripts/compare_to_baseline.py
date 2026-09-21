@@ -7,7 +7,7 @@ val/ folder). So differences here are model differences, not resampling.
 import json
 import os
 
-REPO = r'C:\Users\karpe\OneDrive\Desktop\AIML Project\Hackerearth\Claude\Final_Year_project\pneumonia-xai'
+REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 new = json.load(open(os.path.join(REPO, 'models', 'metrics.json'), encoding='utf-8'))
 old = json.load(open(os.path.join(REPO, 'models', 'baseline_vgg16_2026-09-07', 'metrics.json'),
                      encoding='utf-8'))
