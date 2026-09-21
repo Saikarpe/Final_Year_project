@@ -1,99 +1,99 @@
 {
-  "generated_at": "2026-09-07T04:35:01Z",
-  "model_path": "C:\\Users\\karpe\\OneDrive\\Desktop\\Final_Year_project\\pneumonia-xai\\models\\pneumonia_model.h5",
-  "model_hash": "63a339ab677f",
+  "generated_at": "2026-09-21T04:55:18Z",
+  "model_path": "C:\\Users\\karpe\\OneDrive\\Desktop\\AIML Project\\Hackerearth\\Claude\\Final_Year_project\\pneumonia-xai\\models\\pneumonia_model.h5",
+  "model_hash": "2a279eeff356",
   "classification": {
     "auroc": {
-      "auroc": 0.994053564020221,
-      "ci_lower": 0.9892362636039397,
-      "ci_upper": 0.997627837719004,
+      "auroc": 0.9947142791290852,
+      "ci_lower": 0.9907916220497781,
+      "ci_upper": 0.9980231815917299,
       "ci_level": 0.95,
       "n_bootstrap": 1000
     },
     "sensitivity_specificity": {
-      "sensitivity": 0.9559164733178654,
-      "specificity": 0.9668874172185431,
-      "tp": 412,
-      "tn": 146,
-      "fp": 5,
-      "fn": 19
+      "sensitivity": 0.9396751740139211,
+      "specificity": 0.9867549668874173,
+      "tp": 405,
+      "tn": 149,
+      "fp": 2,
+      "fn": 26
     },
     "calibration": {
       "curve": [
         {
           "bin_lower": 0.0,
           "bin_upper": 0.1,
-          "mean_predicted": 0.014890056602004431,
-          "observed_frequency": 0.06,
-          "n": 150
+          "mean_predicted": 0.023640736258167722,
+          "observed_frequency": 0.0547945205479452,
+          "n": 146
         },
         {
           "bin_lower": 0.1,
           "bin_upper": 0.2,
-          "mean_predicted": 0.13409917400433466,
-          "observed_frequency": 0.6153846153846154,
-          "n": 13
+          "mean_predicted": 0.15328601835405126,
+          "observed_frequency": 0.5294117647058824,
+          "n": 17
         },
         {
           "bin_lower": 0.2,
           "bin_upper": 0.30000000000000004,
-          "mean_predicted": 0.2590208926371166,
-          "observed_frequency": 0.8571428571428571,
-          "n": 7
+          "mean_predicted": 0.25016818775071037,
+          "observed_frequency": 0.7777777777777778,
+          "n": 9
         },
         {
           "bin_lower": 0.30000000000000004,
           "bin_upper": 0.4,
-          "mean_predicted": 0.368807777762413,
-          "observed_frequency": 0.6666666666666666,
-          "n": 6
+          "mean_predicted": 0.36146163692077,
+          "observed_frequency": 0.9166666666666666,
+          "n": 12
         },
         {
           "bin_lower": 0.4,
           "bin_upper": 0.5,
-          "mean_predicted": 0.46743408271244596,
-          "observed_frequency": 0.8571428571428571,
-          "n": 7
+          "mean_predicted": 0.4600954934954643,
+          "observed_frequency": 0.95,
+          "n": 20
         },
         {
           "bin_lower": 0.5,
           "bin_upper": 0.6000000000000001,
-          "mean_predicted": 0.5467440038919449,
-          "observed_frequency": 1.0,
-          "n": 12
+          "mean_predicted": 0.566768205165863,
+          "observed_frequency": 0.9,
+          "n": 10
         },
         {
           "bin_lower": 0.6000000000000001,
           "bin_upper": 0.7000000000000001,
-          "mean_predicted": 0.6456199049949646,
+          "mean_predicted": 0.6513147435405038,
           "observed_frequency": 1.0,
-          "n": 10
+          "n": 22
         },
         {
           "bin_lower": 0.7000000000000001,
           "bin_upper": 0.8,
-          "mean_predicted": 0.745106211730412,
-          "observed_frequency": 0.9285714285714286,
-          "n": 14
+          "mean_predicted": 0.7541498204072317,
+          "observed_frequency": 1.0,
+          "n": 30
         },
         {
           "bin_lower": 0.8,
           "bin_upper": 0.9,
-          "mean_predicted": 0.8449983398119608,
+          "mean_predicted": 0.85917127430439,
           "observed_frequency": 1.0,
-          "n": 27
+          "n": 80
         },
         {
           "bin_lower": 0.9,
           "bin_upper": 1.0,
-          "mean_predicted": 0.9835569574719384,
+          "mean_predicted": 0.9537592381238937,
           "observed_frequency": 1.0,
-          "n": 336
+          "n": 236
         }
       ],
-      "brier_score": 0.046994449094029826
+      "brier_score": 0.06299667491429943
     },
-    "decision_threshold": 0.21744878590106964,
+    "decision_threshold": 0.3447483777999878,
     "n_test": 582,
     "external_validation": {
       "status": "not_available",
@@ -102,91 +102,100 @@
   },
   "uncertainty": {
     "qhats": {
-      "0.05": 0.6515433192253113,
-      "0.1": 0.37555932998657227,
-      "0.2": 0.11349529027938843
+      "0.05": 0.616051197052002,
+      "0.1": 0.4347419738769531,
+      "0.2": 0.223513662815094
     },
     "empirical_coverage": {
-      "0.05": 0.9570446735395189,
-      "0.1": 0.9106529209621993,
-      "0.2": 0.8281786941580757
+      "0.05": 0.9450171821305842,
+      "0.1": 0.8986254295532646,
+      "0.2": 0.8075601374570447
     },
     "abstention_curve": [
       {
         "alpha": 0.05,
         "target_coverage": 0.95,
-        "abstention_rate": 0.04982817869415808,
-        "accuracy_on_kept": 0.9547920433996383,
-        "n_kept": 553
+        "abstention_rate": 0.06357388316151202,
+        "accuracy_on_kept": 0.9412844036697248,
+        "n_kept": 545
       },
       {
         "alpha": 0.1,
         "target_coverage": 0.9,
-        "abstention_rate": 0.04639175257731959,
-        "accuracy_on_kept": 0.954954954954955,
-        "n_kept": 555
+        "abstention_rate": 0.03436426116838488,
+        "accuracy_on_kept": 0.9306049822064056,
+        "n_kept": 562
       },
       {
         "alpha": 0.2,
         "target_coverage": 0.8,
-        "abstention_rate": 0.15463917525773196,
-        "accuracy_on_kept": 0.9796747967479674,
-        "n_kept": 492
+        "abstention_rate": 0.15807560137457044,
+        "accuracy_on_kept": 0.9591836734693877,
+        "n_kept": 490
       }
     ],
     "n_calibration": 563
   },
   "explanation": {
+    "attention": {
+      "n_samples": 12,
+      "deletion_auc_mean": 0.7549906583658109,
+      "insertion_auc_mean": 0.7703594443853946,
+      "road_mean_drop": -0.09841095150137939,
+      "road_approximate": true,
+      "max_sensitivity_mean": 0.4713909940142656,
+      "complexity_mean": 11.111381299706972
+    },
     "gradcam": {
       "n_samples": 12,
-      "deletion_auc_mean": 0.43031350447032196,
-      "insertion_auc_mean": 0.737466776771249,
-      "road_mean_drop": 0.15038614037669806,
+      "deletion_auc_mean": 0.6102137445937842,
+      "insertion_auc_mean": 0.8508229688741268,
+      "road_mean_drop": 0.1690581830839316,
       "road_approximate": true,
-      "max_sensitivity_mean": 0.4749977533087097,
-      "complexity_mean": 10.02949136741821
+      "max_sensitivity_mean": 0.17953889049795727,
+      "complexity_mean": 11.248298740764183
     },
     "gradcam++": {
       "n_samples": 12,
-      "deletion_auc_mean": 0.479776791864655,
-      "insertion_auc_mean": 0.6590161879153345,
-      "road_mean_drop": 0.06879060591309098,
+      "deletion_auc_mean": 0.6219334648068372,
+      "insertion_auc_mean": 0.8123986390264085,
+      "road_mean_drop": 0.1277279553934932,
       "road_approximate": true,
-      "max_sensitivity_mean": 0.2835998709991109,
-      "complexity_mean": 10.629896594077584
+      "max_sensitivity_mean": 0.16652819558913923,
+      "complexity_mean": 11.368455581930595
     },
     "integrated_gradients": {
       "n_samples": 12,
-      "deletion_auc_mean": 0.9597261378925944,
-      "insertion_auc_mean": 0.9281299244894253,
-      "road_mean_drop": -0.15935868027736433,
+      "deletion_auc_mean": 0.9075829233974219,
+      "insertion_auc_mean": 0.8725293651223183,
+      "road_mean_drop": -0.13833607115472357,
       "road_approximate": true,
-      "max_sensitivity_mean": 0.7065217017506819,
-      "complexity_mean": 10.137689275375456
+      "max_sensitivity_mean": 0.9043239339227805,
+      "complexity_mean": 10.782944362079846
     },
     "scorecam": {
       "n_samples": 4,
-      "deletion_auc_mean": 0.5870759980559039,
-      "insertion_auc_mean": 0.8211918341334066,
-      "road_mean_drop": 0.1138554799661506,
+      "deletion_auc_mean": 0.6665515344124286,
+      "insertion_auc_mean": 0.7148395814932883,
+      "road_mean_drop": -0.051706820167601114,
       "road_approximate": true,
       "max_sensitivity_mean": null,
       "complexity_mean": null
     },
     "occlusion": {
       "n_samples": 4,
-      "deletion_auc_mean": 0.5364114925562586,
-      "insertion_auc_mean": 0.8131360627871583,
-      "road_mean_drop": -0.0066712539834497845,
+      "deletion_auc_mean": 0.8463923078030348,
+      "insertion_auc_mean": 0.9016878497786821,
+      "road_mean_drop": -0.19649221757426857,
       "road_approximate": true,
       "max_sensitivity_mean": null,
       "complexity_mean": null
     },
     "shap": {
       "n_samples": 4,
-      "deletion_auc_mean": 0.9627171116215841,
-      "insertion_auc_mean": 0.9606433988914692,
-      "road_mean_drop": -0.12498209932236932,
+      "deletion_auc_mean": 0.9279981311410666,
+      "insertion_auc_mean": 0.8877311192452908,
+      "road_mean_drop": -0.22011667443439364,
       "road_approximate": true,
       "max_sensitivity_mean": null,
       "complexity_mean": null
@@ -205,37 +214,45 @@
             },
             {
               "stage": "logits",
-              "similarity_to_original": 0.058004517835731566
+              "similarity_to_original": 0.4770218161457078
             },
             {
               "stage": "dense",
-              "similarity_to_original": 0.2054128735706816
+              "similarity_to_original": -0.3351616261224593
             },
             {
-              "stage": "block5",
-              "similarity_to_original": -0.017238558667468325
+              "stage": "head_bn",
+              "similarity_to_original": null
             },
             {
-              "stage": "block4",
-              "similarity_to_original": -0.08239810981063274
+              "stage": "pool",
+              "similarity_to_original": null
             },
             {
-              "stage": "block3",
-              "similarity_to_original": -0.14935350076499912
+              "stage": "backbone_group_1/5",
+              "similarity_to_original": null
             },
             {
-              "stage": "block2",
-              "similarity_to_original": -0.1365531038553341
+              "stage": "backbone_group_2/5",
+              "similarity_to_original": null
             },
             {
-              "stage": "block1",
-              "similarity_to_original": -0.3173375821858096
+              "stage": "backbone_group_3/5",
+              "similarity_to_original": null
+            },
+            {
+              "stage": "backbone_group_4/5",
+              "similarity_to_original": null
+            },
+            {
+              "stage": "backbone_group_5/5",
+              "similarity_to_original": null
             }
           ]
         },
         "label_randomization": {
           "method": "gradcam",
-          "similarity_to_original": 0.4409586832283315,
+          "similarity_to_original": 0.26628163355383416,
           "n_train_images": 60,
           "epochs": 1,
           "note": "proxy: head refit on shuffled labels, backbone frozen and unchanged"
@@ -251,37 +268,45 @@
             },
             {
               "stage": "logits",
-              "similarity_to_original": 0.6596960927905094
+              "similarity_to_original": 0.7732965644382985
             },
             {
               "stage": "dense",
-              "similarity_to_original": 0.6712417507281083
+              "similarity_to_original": 0.7513855756651143
             },
             {
-              "stage": "block5",
-              "similarity_to_original": 0.6423183345322164
+              "stage": "head_bn",
+              "similarity_to_original": null
             },
             {
-              "stage": "block4",
-              "similarity_to_original": 0.6469402713177033
+              "stage": "pool",
+              "similarity_to_original": null
             },
             {
-              "stage": "block3",
-              "similarity_to_original": 0.6391621123792175
+              "stage": "backbone_group_1/5",
+              "similarity_to_original": null
             },
             {
-              "stage": "block2",
-              "similarity_to_original": 0.6184235135805876
+              "stage": "backbone_group_2/5",
+              "similarity_to_original": null
             },
             {
-              "stage": "block1",
-              "similarity_to_original": 0.6512055658777381
+              "stage": "backbone_group_3/5",
+              "similarity_to_original": null
+            },
+            {
+              "stage": "backbone_group_4/5",
+              "similarity_to_original": null
+            },
+            {
+              "stage": "backbone_group_5/5",
+              "similarity_to_original": null
             }
           ]
         },
         "label_randomization": {
           "method": "integrated_gradients",
-          "similarity_to_original": 0.6397198124805324,
+          "similarity_to_original": 0.6827691740741301,
           "n_train_images": 60,
           "epochs": 1,
           "note": "proxy: head refit on shuffled labels, backbone frozen and unchanged"
@@ -290,40 +315,46 @@
     }
   },
   "runtime": {
+    "attention": {
+      "mean_seconds": 0.39866005000658333,
+      "min_seconds": 0.39296179998200387,
+      "max_seconds": 0.4043583000311628,
+      "n_repeats": 2
+    },
     "gradcam": {
-      "mean_seconds": 1.243531099986285,
-      "min_seconds": 1.236263299942948,
-      "max_seconds": 1.250798900029622,
+      "mean_seconds": 0.7426946999621578,
+      "min_seconds": 0.7421598000219092,
+      "max_seconds": 0.7432295999024063,
       "n_repeats": 2
     },
     "gradcam++": {
-      "mean_seconds": 1.2293879000353627,
-      "min_seconds": 1.2289569000713527,
-      "max_seconds": 1.2298188999993727,
+      "mean_seconds": 0.7406062500085682,
+      "min_seconds": 0.7333866000408307,
+      "max_seconds": 0.7478258999763057,
       "n_repeats": 2
     },
     "scorecam": {
-      "mean_seconds": 15.104653600021265,
-      "min_seconds": 15.035445700050332,
-      "max_seconds": 15.1738614999922,
+      "mean_seconds": 7.657637700031046,
+      "min_seconds": 7.393004500074312,
+      "max_seconds": 7.92227089998778,
       "n_repeats": 2
     },
     "integrated_gradients": {
-      "mean_seconds": 13.429947450058535,
-      "min_seconds": 13.35135730006732,
-      "max_seconds": 13.508537600049749,
+      "mean_seconds": 3.5269069499336183,
+      "min_seconds": 3.492609499953687,
+      "max_seconds": 3.5612043999135494,
       "n_repeats": 2
     },
     "occlusion": {
-      "mean_seconds": 44.95995609997772,
-      "min_seconds": 44.6931039999472,
-      "max_seconds": 45.226808200008236,
+      "mean_seconds": 20.256996500014793,
+      "min_seconds": 19.819715399993584,
+      "max_seconds": 20.694277600036003,
       "n_repeats": 2
     },
     "shap": {
-      "mean_seconds": 397.36927919997834,
-      "min_seconds": 103.87466249999125,
-      "max_seconds": 690.8638958999654,
+      "mean_seconds": 30.609592199965846,
+      "min_seconds": 30.568693000008352,
+      "max_seconds": 30.65049139992334,
       "n_repeats": 2
     }
   },
@@ -331,60 +362,60 @@
     "status": "not_available",
     "reason": "Needs D-2 (VinDr-CXR boxes) -- deferred, see docs/decisions_log.md"
   },
-  "scope_note": "Faithfulness/ROAD computed on 12 test images for ['gradcam', 'gradcam++', 'integrated_gradients'] and 4 for ['scorecam', 'occlusion', 'shap'] (cost-scoped, see scripts/evaluate.py). Robustness/complexity computed only for ['gradcam', 'gradcam++', 'integrated_gradients']. Sanity checks (cascading + label randomization) computed only for ['gradcam', 'integrated_gradients'].",
+  "scope_note": "Faithfulness/ROAD computed on 12 test images for attention, gradcam, gradcam++ and integrated_gradients and 4 for scorecam, occlusion and shap (cost-scoped, see scripts/evaluate.py). Robustness/complexity computed only for attention, gradcam, gradcam++ and integrated_gradients. Sanity checks (cascading + label randomization) computed only for gradcam and integrated_gradients.",
   "audits": {
     "shortcut_audit_summary": {
       "n_samples": 30,
-      "border_masking_mean_delta": 0.08882117936609575,
-      "laterality_masking_mean_delta": 0.020498403446193456,
-      "blurred_source_mean_delta": 0.020885535089655606,
-      "blurred_source_still_confident_rate": 0.2,
-      "attribution_in_lung_field_ratio_mean": 0.5232255123799053,
+      "border_masking_mean_delta": -0.11645692350963752,
+      "laterality_masking_mean_delta": -0.01812217935609321,
+      "blurred_source_mean_delta": -0.22798691677550476,
+      "blurred_source_still_confident_rate": 0.7,
+      "attribution_in_lung_field_ratio_mean": 0.5864032134650993,
       "lung_field_mask_is_approximate": true
     },
     "shortcut_audit_rows": [
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.9996928572654724,
-          "masked_proba": 0.8760055899620056,
-          "delta": 0.1236872673034668
+          "orig_proba": 0.4229373037815094,
+          "masked_proba": 0.8907555937767029,
+          "delta": -0.4678182899951935
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.9996928572654724,
-          "masked_proba": 0.9908640384674072,
-          "delta": 0.008828818798065186
+          "orig_proba": 0.4229373037815094,
+          "masked_proba": 0.4515342116355896,
+          "delta": -0.0285969078540802
         },
         "blurred_source_probe": {
-          "orig_proba": 0.9996928572654724,
-          "blurred_proba": 0.825442910194397,
-          "delta": 0.17424994707107544,
-          "still_confident_same_class": true
+          "orig_proba": 0.4229373037815094,
+          "blurred_proba": 0.9251267313957214,
+          "delta": -0.502189427614212,
+          "still_confident_same_class": false
         },
-        "attribution_in_lung_field_ratio": 0.5853389539456074,
+        "attribution_in_lung_field_ratio": 0.5973016859229453,
         "lung_field_mask_is_approximate": true,
-        "relpath": "train/PNEUMONIA/person343_virus_704.jpeg",
+        "relpath": "train/PNEUMONIA/person343_bacteria_1584.jpeg",
         "true_label": "PNEUMONIA"
       },
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.00021331850439310074,
-          "masked_proba": 0.02254224568605423,
-          "delta": -0.02232892718166113
+          "orig_proba": 0.020350206643342972,
+          "masked_proba": 0.2695864737033844,
+          "delta": -0.24923626706004143
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.00021331850439310074,
-          "masked_proba": 0.00022756091493647546,
-          "delta": -1.4242410543374717e-05
+          "orig_proba": 0.020350206643342972,
+          "masked_proba": 0.02838837541639805,
+          "delta": -0.008038168773055077
         },
         "blurred_source_probe": {
-          "orig_proba": 0.00021331850439310074,
-          "blurred_proba": 0.4511559307575226,
-          "delta": -0.4509426122531295,
+          "orig_proba": 0.020350206643342972,
+          "blurred_proba": 0.7657759785652161,
+          "delta": -0.7454257719218731,
           "still_confident_same_class": false
         },
-        "attribution_in_lung_field_ratio": 0.5671234727181292,
+        "attribution_in_lung_field_ratio": 0.5640697319322516,
         "lung_field_mask_is_approximate": true,
         "relpath": "train/NORMAL/NORMAL2-IM-1178-0001.jpeg",
         "true_label": "NORMAL"
@@ -392,22 +423,22 @@
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.00988180935382843,
-          "masked_proba": 0.31255078315734863,
-          "delta": -0.3026689738035202
+          "orig_proba": 0.06875339150428772,
+          "masked_proba": 0.47696030139923096,
+          "delta": -0.40820690989494324
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.00988180935382843,
-          "masked_proba": 0.013620482757687569,
-          "delta": -0.0037386734038591385
+          "orig_proba": 0.06875339150428772,
+          "masked_proba": 0.08169176429510117,
+          "delta": -0.012938372790813446
         },
         "blurred_source_probe": {
-          "orig_proba": 0.00988180935382843,
-          "blurred_proba": 0.5514785647392273,
-          "delta": -0.5415967553853989,
+          "orig_proba": 0.06875339150428772,
+          "blurred_proba": 0.8321284651756287,
+          "delta": -0.7633750736713409,
           "still_confident_same_class": false
         },
-        "attribution_in_lung_field_ratio": 0.6114676927196144,
+        "attribution_in_lung_field_ratio": 0.6029907667981926,
         "lung_field_mask_is_approximate": true,
         "relpath": "test/NORMAL/NORMAL2-IM-0131-0001.jpeg",
         "true_label": "NORMAL"
@@ -415,68 +446,68 @@
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.999085545539856,
-          "masked_proba": 0.9729856252670288,
-          "delta": 0.02609992027282715
+          "orig_proba": 0.9569829106330872,
+          "masked_proba": 0.9621070027351379,
+          "delta": -0.005124092102050781
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.999085545539856,
-          "masked_proba": 0.9879903793334961,
-          "delta": 0.011095166206359863
+          "orig_proba": 0.9569829106330872,
+          "masked_proba": 0.9723635911941528,
+          "delta": -0.015380680561065674
         },
         "blurred_source_probe": {
-          "orig_proba": 0.999085545539856,
-          "blurred_proba": 0.516554594039917,
-          "delta": 0.48253095149993896,
-          "still_confident_same_class": false
-        },
-        "attribution_in_lung_field_ratio": 0.47242956894017335,
-        "lung_field_mask_is_approximate": true,
-        "relpath": "train/PNEUMONIA/person441_bacteria_1917.jpeg",
-        "true_label": "PNEUMONIA"
-      },
-      {
-        "method": "gradcam",
-        "border_masking": {
-          "orig_proba": 0.9996554255485535,
-          "masked_proba": 0.9437927007675171,
-          "delta": 0.05586272478103638
-        },
-        "laterality_marker_masking": {
-          "orig_proba": 0.9996554255485535,
-          "masked_proba": 0.9988225102424622,
-          "delta": 0.0008329153060913086
-        },
-        "blurred_source_probe": {
-          "orig_proba": 0.9996554255485535,
-          "blurred_proba": 0.8794254064559937,
-          "delta": 0.12023001909255981,
+          "orig_proba": 0.9569829106330872,
+          "blurred_proba": 0.8729430437088013,
+          "delta": 0.08403986692428589,
           "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.5359235166778162,
+        "attribution_in_lung_field_ratio": 0.608476107065235,
         "lung_field_mask_is_approximate": true,
-        "relpath": "train/PNEUMONIA/person67_bacteria_330.jpeg",
+        "relpath": "train/PNEUMONIA/person441_bacteria_1916.jpeg",
         "true_label": "PNEUMONIA"
       },
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.9924921989440918,
-          "masked_proba": 0.8316265344619751,
-          "delta": 0.1608656644821167
+          "orig_proba": 0.9590674638748169,
+          "masked_proba": 0.9756684303283691,
+          "delta": -0.016600966453552246
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.9924921989440918,
-          "masked_proba": 0.9743854403495789,
-          "delta": 0.01810675859451294
+          "orig_proba": 0.9590674638748169,
+          "masked_proba": 0.9470446705818176,
+          "delta": 0.012022793292999268
         },
         "blurred_source_probe": {
-          "orig_proba": 0.9924921989440918,
-          "blurred_proba": 0.46761420369148254,
-          "delta": 0.5248779952526093,
-          "still_confident_same_class": false
+          "orig_proba": 0.9590674638748169,
+          "blurred_proba": 0.9146252274513245,
+          "delta": 0.04444223642349243,
+          "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.4681777558782206,
+        "attribution_in_lung_field_ratio": 0.5861908406935522,
+        "lung_field_mask_is_approximate": true,
+        "relpath": "train/PNEUMONIA/person67_bacteria_329.jpeg",
+        "true_label": "PNEUMONIA"
+      },
+      {
+        "method": "gradcam",
+        "border_masking": {
+          "orig_proba": 0.911113440990448,
+          "masked_proba": 0.9597635865211487,
+          "delta": -0.048650145530700684
+        },
+        "laterality_marker_masking": {
+          "orig_proba": 0.911113440990448,
+          "masked_proba": 0.9339024424552917,
+          "delta": -0.02278900146484375
+        },
+        "blurred_source_probe": {
+          "orig_proba": 0.911113440990448,
+          "blurred_proba": 0.8827601075172424,
+          "delta": 0.028353333473205566,
+          "still_confident_same_class": true
+        },
+        "attribution_in_lung_field_ratio": 0.5236231420279389,
         "lung_field_mask_is_approximate": true,
         "relpath": "train/PNEUMONIA/person1176_bacteria_3124.jpeg",
         "true_label": "PNEUMONIA"
@@ -484,22 +515,22 @@
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.99720698595047,
-          "masked_proba": 0.9492284655570984,
-          "delta": 0.04797852039337158
+          "orig_proba": 0.9858399629592896,
+          "masked_proba": 0.9852142930030823,
+          "delta": 0.0006256699562072754
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.99720698595047,
-          "masked_proba": 0.9956648349761963,
-          "delta": 0.0015421509742736816
+          "orig_proba": 0.9858399629592896,
+          "masked_proba": 0.978188157081604,
+          "delta": 0.007651805877685547
         },
         "blurred_source_probe": {
-          "orig_proba": 0.99720698595047,
-          "blurred_proba": 0.7858270406723022,
-          "delta": 0.21137994527816772,
-          "still_confident_same_class": false
+          "orig_proba": 0.9858399629592896,
+          "blurred_proba": 0.9528699517250061,
+          "delta": 0.03297001123428345,
+          "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.5856463289713694,
+        "attribution_in_lung_field_ratio": 0.5822708622488078,
         "lung_field_mask_is_approximate": true,
         "relpath": "test/PNEUMONIA/person126_bacteria_599.jpeg",
         "true_label": "PNEUMONIA"
@@ -507,22 +538,22 @@
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.9996330738067627,
-          "masked_proba": 0.8586911559104919,
-          "delta": 0.14094191789627075
+          "orig_proba": 0.9644681215286255,
+          "masked_proba": 0.9826834797859192,
+          "delta": -0.0182153582572937
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.9996330738067627,
-          "masked_proba": 0.9988905787467957,
-          "delta": 0.000742495059967041
+          "orig_proba": 0.9644681215286255,
+          "masked_proba": 0.9808197617530823,
+          "delta": -0.016351640224456787
         },
         "blurred_source_probe": {
-          "orig_proba": 0.9996330738067627,
-          "blurred_proba": 0.8382031321525574,
-          "delta": 0.16142994165420532,
+          "orig_proba": 0.9644681215286255,
+          "blurred_proba": 0.9254056811332703,
+          "delta": 0.039062440395355225,
           "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.459694596739948,
+        "attribution_in_lung_field_ratio": 0.5742790987856885,
         "lung_field_mask_is_approximate": true,
         "relpath": "train/PNEUMONIA/person1188_bacteria_3137.jpeg",
         "true_label": "PNEUMONIA"
@@ -530,45 +561,45 @@
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.97966068983078,
-          "masked_proba": 0.7407479286193848,
-          "delta": 0.23891276121139526
+          "orig_proba": 0.9766125679016113,
+          "masked_proba": 0.9798550605773926,
+          "delta": -0.00324249267578125
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.97966068983078,
-          "masked_proba": 0.937477171421051,
-          "delta": 0.042183518409729004
+          "orig_proba": 0.9766125679016113,
+          "masked_proba": 0.9772225022315979,
+          "delta": -0.0006099343299865723
         },
         "blurred_source_probe": {
-          "orig_proba": 0.97966068983078,
-          "blurred_proba": 0.7695267796516418,
-          "delta": 0.21013391017913818,
-          "still_confident_same_class": false
+          "orig_proba": 0.9766125679016113,
+          "blurred_proba": 0.9418312311172485,
+          "delta": 0.03478133678436279,
+          "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.6397211957080263,
+        "attribution_in_lung_field_ratio": 0.5527472624072061,
         "lung_field_mask_is_approximate": true,
-        "relpath": "train/PNEUMONIA/person835_virus_1472.jpeg",
+        "relpath": "train/PNEUMONIA/person835_bacteria_2750.jpeg",
         "true_label": "PNEUMONIA"
       },
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.025417454540729523,
-          "masked_proba": 0.3027447462081909,
-          "delta": -0.2773272916674614
+          "orig_proba": 0.361876904964447,
+          "masked_proba": 0.5985023975372314,
+          "delta": -0.23662549257278442
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.025417454540729523,
-          "masked_proba": 0.022183960303664207,
-          "delta": 0.0032334942370653152
+          "orig_proba": 0.361876904964447,
+          "masked_proba": 0.49031704664230347,
+          "delta": -0.12844014167785645
         },
         "blurred_source_probe": {
-          "orig_proba": 0.025417454540729523,
-          "blurred_proba": 0.3640545606613159,
-          "delta": -0.3386371061205864,
+          "orig_proba": 0.361876904964447,
+          "blurred_proba": 0.863775908946991,
+          "delta": -0.501899003982544,
           "still_confident_same_class": false
         },
-        "attribution_in_lung_field_ratio": 0.4706260054124521,
+        "attribution_in_lung_field_ratio": 0.5666113150056299,
         "lung_field_mask_is_approximate": true,
         "relpath": "train/NORMAL/IM-0584-0001.jpeg",
         "true_label": "NORMAL"
@@ -576,22 +607,22 @@
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 8.691985567566007e-05,
-          "masked_proba": 0.00971478596329689,
-          "delta": -0.00962786610762123
+          "orig_proba": 0.008340083062648773,
+          "masked_proba": 0.04247112572193146,
+          "delta": -0.034131042659282684
         },
         "laterality_marker_masking": {
-          "orig_proba": 8.691985567566007e-05,
-          "masked_proba": 6.704658881062642e-05,
-          "delta": 1.9873266865033656e-05
+          "orig_proba": 0.008340083062648773,
+          "masked_proba": 0.00786509271711111,
+          "delta": 0.0004749903455376625
         },
         "blurred_source_probe": {
-          "orig_proba": 8.691985567566007e-05,
-          "blurred_proba": 0.45104777812957764,
-          "delta": -0.450960858273902,
+          "orig_proba": 0.008340083062648773,
+          "blurred_proba": 0.8357036709785461,
+          "delta": -0.8273635879158974,
           "still_confident_same_class": false
         },
-        "attribution_in_lung_field_ratio": 0.24495990613376983,
+        "attribution_in_lung_field_ratio": 0.579195339499378,
         "lung_field_mask_is_approximate": true,
         "relpath": "train/NORMAL/IM-0748-0001.jpeg",
         "true_label": "NORMAL"
@@ -599,91 +630,91 @@
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.9868085384368896,
-          "masked_proba": 0.5953643918037415,
-          "delta": 0.3914441466331482
+          "orig_proba": 0.9626349806785583,
+          "masked_proba": 0.9638654589653015,
+          "delta": -0.001230478286743164
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.9868085384368896,
-          "masked_proba": 0.9450282454490662,
-          "delta": 0.041780292987823486
+          "orig_proba": 0.9626349806785583,
+          "masked_proba": 0.9749875664710999,
+          "delta": -0.012352585792541504
         },
         "blurred_source_probe": {
-          "orig_proba": 0.9868085384368896,
-          "blurred_proba": 0.8546212911605835,
-          "delta": 0.13218724727630615,
+          "orig_proba": 0.9626349806785583,
+          "blurred_proba": 0.9262981414794922,
+          "delta": 0.03633683919906616,
           "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.5163357767208606,
+        "attribution_in_lung_field_ratio": 0.5518919058966325,
         "lung_field_mask_is_approximate": true,
-        "relpath": "train/PNEUMONIA/person382_bacteria_1740.jpeg",
+        "relpath": "train/PNEUMONIA/person382_bacteria_1739.jpeg",
         "true_label": "PNEUMONIA"
       },
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.1092035099864006,
-          "masked_proba": 0.09675978869199753,
-          "delta": 0.012443721294403076
+          "orig_proba": 0.8393130302429199,
+          "masked_proba": 0.981396496295929,
+          "delta": -0.14208346605300903
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.1092035099864006,
-          "masked_proba": 0.07285523414611816,
-          "delta": 0.03634827584028244
+          "orig_proba": 0.8393130302429199,
+          "masked_proba": 0.8908098936080933,
+          "delta": -0.05149686336517334
         },
         "blurred_source_probe": {
-          "orig_proba": 0.1092035099864006,
-          "blurred_proba": 0.7003759145736694,
-          "delta": -0.5911724045872688,
-          "still_confident_same_class": false
+          "orig_proba": 0.8393130302429199,
+          "blurred_proba": 0.9448087215423584,
+          "delta": -0.10549569129943848,
+          "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.708362126599039,
+        "attribution_in_lung_field_ratio": 0.6081853956560385,
         "lung_field_mask_is_approximate": true,
-        "relpath": "train/PNEUMONIA/person362_bacteria_1652.jpeg",
+        "relpath": "train/PNEUMONIA/person343_virus_704.jpeg",
         "true_label": "PNEUMONIA"
       },
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.9980942606925964,
-          "masked_proba": 0.850048840045929,
-          "delta": 0.14804542064666748
+          "orig_proba": 0.8440806865692139,
+          "masked_proba": 0.9625988602638245,
+          "delta": -0.1185181736946106
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.9980942606925964,
-          "masked_proba": 0.9901663661003113,
-          "delta": 0.007927894592285156
+          "orig_proba": 0.8440806865692139,
+          "masked_proba": 0.8663867115974426,
+          "delta": -0.02230602502822876
         },
         "blurred_source_probe": {
-          "orig_proba": 0.9980942606925964,
-          "blurred_proba": 0.6441129446029663,
-          "delta": 0.3539813160896301,
-          "still_confident_same_class": false
+          "orig_proba": 0.8440806865692139,
+          "blurred_proba": 0.9394878149032593,
+          "delta": -0.09540712833404541,
+          "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.39044089146868793,
+        "attribution_in_lung_field_ratio": 0.5251758368181586,
         "lung_field_mask_is_approximate": true,
-        "relpath": "train/PNEUMONIA/person413_bacteria_1830.jpeg",
+        "relpath": "train/PNEUMONIA/person413_bacteria_1829.jpeg",
         "true_label": "PNEUMONIA"
       },
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.9988672137260437,
-          "masked_proba": 0.8818325996398926,
-          "delta": 0.11703461408615112
+          "orig_proba": 0.9364115595817566,
+          "masked_proba": 0.9720584750175476,
+          "delta": -0.035646915435791016
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.9988672137260437,
-          "masked_proba": 0.9983316659927368,
-          "delta": 0.0005355477333068848
+          "orig_proba": 0.9364115595817566,
+          "masked_proba": 0.945249080657959,
+          "delta": -0.008837521076202393
         },
         "blurred_source_probe": {
-          "orig_proba": 0.9988672137260437,
-          "blurred_proba": 0.7259966731071472,
-          "delta": 0.2728705406188965,
-          "still_confident_same_class": false
+          "orig_proba": 0.9364115595817566,
+          "blurred_proba": 0.9336703419685364,
+          "delta": 0.002741217613220215,
+          "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.5753170641889013,
+        "attribution_in_lung_field_ratio": 0.5767923026032237,
         "lung_field_mask_is_approximate": true,
         "relpath": "train/PNEUMONIA/person1178_bacteria_3126.jpeg",
         "true_label": "PNEUMONIA"
@@ -691,22 +722,22 @@
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.9320605993270874,
-          "masked_proba": 0.6651812791824341,
-          "delta": 0.2668793201446533
+          "orig_proba": 0.9307286739349365,
+          "masked_proba": 0.9751747250556946,
+          "delta": -0.04444605112075806
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.9320605993270874,
-          "masked_proba": 0.8959596753120422,
-          "delta": 0.036100924015045166
+          "orig_proba": 0.9307286739349365,
+          "masked_proba": 0.9287823438644409,
+          "delta": 0.0019463300704956055
         },
         "blurred_source_probe": {
-          "orig_proba": 0.9320605993270874,
-          "blurred_proba": 0.5325183272361755,
-          "delta": 0.39954227209091187,
-          "still_confident_same_class": false
+          "orig_proba": 0.9307286739349365,
+          "blurred_proba": 0.9370633363723755,
+          "delta": -0.006334662437438965,
+          "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.5711444593921349,
+        "attribution_in_lung_field_ratio": 0.6245432061738659,
         "lung_field_mask_is_approximate": true,
         "relpath": "train/PNEUMONIA/person1679_bacteria_4450.jpeg",
         "true_label": "PNEUMONIA"
@@ -714,45 +745,45 @@
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.996991753578186,
-          "masked_proba": 0.812859296798706,
-          "delta": 0.18413245677947998
+          "orig_proba": 0.8852243423461914,
+          "masked_proba": 0.973930299282074,
+          "delta": -0.08870595693588257
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.996991753578186,
-          "masked_proba": 0.973939061164856,
-          "delta": 0.023052692413330078
+          "orig_proba": 0.8852243423461914,
+          "masked_proba": 0.9123270511627197,
+          "delta": -0.02710270881652832
         },
         "blurred_source_probe": {
-          "orig_proba": 0.996991753578186,
-          "blurred_proba": 0.7251529097557068,
-          "delta": 0.27183884382247925,
-          "still_confident_same_class": false
+          "orig_proba": 0.8852243423461914,
+          "blurred_proba": 0.9662865400314331,
+          "delta": -0.0810621976852417,
+          "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.3550739413376578,
+        "attribution_in_lung_field_ratio": 0.6089134937942255,
         "lung_field_mask_is_approximate": true,
-        "relpath": "train/PNEUMONIA/person911_bacteria_2836.jpeg",
+        "relpath": "train/PNEUMONIA/person909_virus_1565.jpeg",
         "true_label": "PNEUMONIA"
       },
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.998705267906189,
-          "masked_proba": 0.8415804505348206,
-          "delta": 0.1571248173713684
+          "orig_proba": 0.9178071022033691,
+          "masked_proba": 0.9668064117431641,
+          "delta": -0.04899930953979492
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.998705267906189,
-          "masked_proba": 0.9939904808998108,
-          "delta": 0.004714787006378174
+          "orig_proba": 0.9178071022033691,
+          "masked_proba": 0.9374913573265076,
+          "delta": -0.019684255123138428
         },
         "blurred_source_probe": {
-          "orig_proba": 0.998705267906189,
-          "blurred_proba": 0.7214784622192383,
-          "delta": 0.2772268056869507,
-          "still_confident_same_class": false
+          "orig_proba": 0.9178071022033691,
+          "blurred_proba": 0.9410287737846375,
+          "delta": -0.02322167158126831,
+          "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.527442235888092,
+        "attribution_in_lung_field_ratio": 0.6722176386379386,
         "lung_field_mask_is_approximate": true,
         "relpath": "train/PNEUMONIA/person1126_virus_1853.jpeg",
         "true_label": "PNEUMONIA"
@@ -760,22 +791,22 @@
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.0027269190177321434,
-          "masked_proba": 0.07999084144830704,
-          "delta": -0.0772639224305749
+          "orig_proba": 0.014221254736185074,
+          "masked_proba": 0.052276529371738434,
+          "delta": -0.03805527463555336
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.0027269190177321434,
-          "masked_proba": 0.0034400138538330793,
-          "delta": -0.0007130948361009359
+          "orig_proba": 0.014221254736185074,
+          "masked_proba": 0.01683589071035385,
+          "delta": -0.0026146359741687775
         },
         "blurred_source_probe": {
-          "orig_proba": 0.0027269190177321434,
-          "blurred_proba": 0.5634883046150208,
-          "delta": -0.5607613855972886,
+          "orig_proba": 0.014221254736185074,
+          "blurred_proba": 0.8961419463157654,
+          "delta": -0.8819206915795803,
           "still_confident_same_class": false
         },
-        "attribution_in_lung_field_ratio": 0.6361388962707522,
+        "attribution_in_lung_field_ratio": 0.6000084747578771,
         "lung_field_mask_is_approximate": true,
         "relpath": "train/NORMAL/NORMAL2-IM-1315-0001.jpeg",
         "true_label": "NORMAL"
@@ -783,22 +814,22 @@
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 1.6181531464098953e-05,
-          "masked_proba": 0.00993405468761921,
-          "delta": -0.00991787315615511
+          "orig_proba": 0.005348466336727142,
+          "masked_proba": 0.04224005341529846,
+          "delta": -0.03689158707857132
         },
         "laterality_marker_masking": {
-          "orig_proba": 1.6181531464098953e-05,
-          "masked_proba": 4.049899143865332e-05,
-          "delta": -2.4317459974554367e-05
+          "orig_proba": 0.005348466336727142,
+          "masked_proba": 0.0060601611621677876,
+          "delta": -0.0007116948254406452
         },
         "blurred_source_probe": {
-          "orig_proba": 1.6181531464098953e-05,
-          "blurred_proba": 0.2153645008802414,
-          "delta": -0.2153483193487773,
+          "orig_proba": 0.005348466336727142,
+          "blurred_proba": 0.8975738883018494,
+          "delta": -0.8922254219651222,
           "still_confident_same_class": false
         },
-        "attribution_in_lung_field_ratio": 0.5176638945323597,
+        "attribution_in_lung_field_ratio": 0.5931700245358226,
         "lung_field_mask_is_approximate": true,
         "relpath": "train/NORMAL/NORMAL2-IM-1148-0001.jpeg",
         "true_label": "NORMAL"
@@ -806,22 +837,22 @@
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.9987848401069641,
-          "masked_proba": 0.6653414368629456,
-          "delta": 0.33344340324401855
+          "orig_proba": 0.8211706280708313,
+          "masked_proba": 0.9706881046295166,
+          "delta": -0.1495174765586853
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.9987848401069641,
-          "masked_proba": 0.99738609790802,
-          "delta": 0.0013987421989440918
+          "orig_proba": 0.8211706280708313,
+          "masked_proba": 0.8715791702270508,
+          "delta": -0.05040854215621948
         },
         "blurred_source_probe": {
-          "orig_proba": 0.9987848401069641,
-          "blurred_proba": 0.6533946990966797,
-          "delta": 0.3453901410102844,
-          "still_confident_same_class": false
+          "orig_proba": 0.8211706280708313,
+          "blurred_proba": 0.9098471403121948,
+          "delta": -0.08867651224136353,
+          "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.4314696741606526,
+        "attribution_in_lung_field_ratio": 0.6471435312266727,
         "lung_field_mask_is_approximate": true,
         "relpath": "train/PNEUMONIA/person1087_virus_1799.jpeg",
         "true_label": "PNEUMONIA"
@@ -829,22 +860,22 @@
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.9904979467391968,
-          "masked_proba": 0.9375078082084656,
-          "delta": 0.0529901385307312
+          "orig_proba": 0.9116167426109314,
+          "masked_proba": 0.9673558473587036,
+          "delta": -0.05573910474777222
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.9904979467391968,
-          "masked_proba": 0.9848213195800781,
-          "delta": 0.005676627159118652
+          "orig_proba": 0.9116167426109314,
+          "masked_proba": 0.9357445240020752,
+          "delta": -0.0241277813911438
         },
         "blurred_source_probe": {
-          "orig_proba": 0.9904979467391968,
-          "blurred_proba": 0.8827875852584839,
-          "delta": 0.10771036148071289,
+          "orig_proba": 0.9116167426109314,
+          "blurred_proba": 0.9321156144142151,
+          "delta": -0.02049887180328369,
           "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.5109358804890196,
+        "attribution_in_lung_field_ratio": 0.6291028955485369,
         "lung_field_mask_is_approximate": true,
         "relpath": "test/PNEUMONIA/person33_virus_72.jpeg",
         "true_label": "PNEUMONIA"
@@ -852,45 +883,45 @@
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.8463680148124695,
-          "masked_proba": 0.6982154846191406,
-          "delta": 0.14815253019332886
+          "orig_proba": 0.7707995176315308,
+          "masked_proba": 0.9655781388282776,
+          "delta": -0.19477862119674683
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.8463680148124695,
-          "masked_proba": 0.7897415161132812,
-          "delta": 0.05662649869918823
+          "orig_proba": 0.7707995176315308,
+          "masked_proba": 0.8331177234649658,
+          "delta": -0.06231820583343506
         },
         "blurred_source_probe": {
-          "orig_proba": 0.8463680148124695,
-          "blurred_proba": 0.8587796688079834,
-          "delta": -0.012411653995513916,
+          "orig_proba": 0.7707995176315308,
+          "blurred_proba": 0.9423348307609558,
+          "delta": -0.17153531312942505,
           "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.7545551349109476,
+        "attribution_in_lung_field_ratio": 0.612414292222541,
         "lung_field_mask_is_approximate": true,
-        "relpath": "train/PNEUMONIA/person418_bacteria_1843.jpeg",
+        "relpath": "train/PNEUMONIA/person413_virus_844.jpeg",
         "true_label": "PNEUMONIA"
       },
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.6318680047988892,
-          "masked_proba": 0.7997963428497314,
-          "delta": -0.16792833805084229
+          "orig_proba": 0.833603024482727,
+          "masked_proba": 0.9567809700965881,
+          "delta": -0.12317794561386108
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.6318680047988892,
-          "masked_proba": 0.45119795203208923,
-          "delta": 0.18067005276679993
+          "orig_proba": 0.833603024482727,
+          "masked_proba": 0.857400119304657,
+          "delta": -0.02379709482192993
         },
         "blurred_source_probe": {
-          "orig_proba": 0.6318680047988892,
-          "blurred_proba": 0.7470816969871521,
-          "delta": -0.11521369218826294,
-          "still_confident_same_class": false
+          "orig_proba": 0.833603024482727,
+          "blurred_proba": 0.877551257610321,
+          "delta": -0.043948233127593994,
+          "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.5348426836544751,
+        "attribution_in_lung_field_ratio": 0.646791778320398,
         "lung_field_mask_is_approximate": true,
         "relpath": "test/PNEUMONIA/person119_bacteria_567.jpeg",
         "true_label": "PNEUMONIA"
@@ -898,22 +929,22 @@
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.015550464391708374,
-          "masked_proba": 0.05196573957800865,
-          "delta": -0.03641527518630028
+          "orig_proba": 0.03908775374293327,
+          "masked_proba": 0.28201285004615784,
+          "delta": -0.24292509630322456
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.015550464391708374,
-          "masked_proba": 0.005903119686990976,
-          "delta": 0.009647344704717398
+          "orig_proba": 0.03908775374293327,
+          "masked_proba": 0.0436965636909008,
+          "delta": -0.004608809947967529
         },
         "blurred_source_probe": {
-          "orig_proba": 0.015550464391708374,
-          "blurred_proba": 0.6758145689964294,
-          "delta": -0.6602641046047211,
+          "orig_proba": 0.03908775374293327,
+          "blurred_proba": 0.8252193331718445,
+          "delta": -0.7861315794289112,
           "still_confident_same_class": false
         },
-        "attribution_in_lung_field_ratio": 0.393784200474563,
+        "attribution_in_lung_field_ratio": 0.5419459020734941,
         "lung_field_mask_is_approximate": true,
         "relpath": "test/NORMAL/NORMAL2-IM-0019-0001.jpeg",
         "true_label": "NORMAL"
@@ -921,22 +952,22 @@
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.9988157749176025,
-          "masked_proba": 0.6012566685676575,
-          "delta": 0.39755910634994507
+          "orig_proba": 0.9099299907684326,
+          "masked_proba": 0.9498932361602783,
+          "delta": -0.0399632453918457
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.9988157749176025,
-          "masked_proba": 0.9974362254142761,
-          "delta": 0.001379549503326416
+          "orig_proba": 0.9099299907684326,
+          "masked_proba": 0.9122467637062073,
+          "delta": -0.002316772937774658
         },
         "blurred_source_probe": {
-          "orig_proba": 0.9988157749176025,
-          "blurred_proba": 0.6864999532699585,
-          "delta": 0.31231582164764404,
-          "still_confident_same_class": false
+          "orig_proba": 0.9099299907684326,
+          "blurred_proba": 0.8930773735046387,
+          "delta": 0.016852617263793945,
+          "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.5356359431675328,
+        "attribution_in_lung_field_ratio": 0.5481930086111239,
         "lung_field_mask_is_approximate": true,
         "relpath": "test/PNEUMONIA/person131_bacteria_629.jpeg",
         "true_label": "PNEUMONIA"
@@ -944,22 +975,22 @@
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.07156534492969513,
-          "masked_proba": 0.27985188364982605,
-          "delta": -0.20828653872013092
+          "orig_proba": 0.10204501450061798,
+          "masked_proba": 0.5873948931694031,
+          "delta": -0.4853498786687851
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.07156534492969513,
-          "masked_proba": 0.021789681166410446,
-          "delta": 0.04977566376328468
+          "orig_proba": 0.10204501450061798,
+          "masked_proba": 0.10687856376171112,
+          "delta": -0.00483354926109314
         },
         "blurred_source_probe": {
-          "orig_proba": 0.07156534492969513,
-          "blurred_proba": 0.641862154006958,
-          "delta": -0.5702968090772629,
+          "orig_proba": 0.10204501450061798,
+          "blurred_proba": 0.776367723941803,
+          "delta": -0.674322709441185,
           "still_confident_same_class": false
         },
-        "attribution_in_lung_field_ratio": 0.6185558925239465,
+        "attribution_in_lung_field_ratio": 0.5408346759412391,
         "lung_field_mask_is_approximate": true,
         "relpath": "train/NORMAL/NORMAL2-IM-0890-0001.jpeg",
         "true_label": "NORMAL"
@@ -967,45 +998,45 @@
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.9998977184295654,
-          "masked_proba": 0.9369307160377502,
-          "delta": 0.06296700239181519
+          "orig_proba": 0.9866654276847839,
+          "masked_proba": 0.9820380210876465,
+          "delta": 0.004627406597137451
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.9998977184295654,
-          "masked_proba": 0.9992350935935974,
-          "delta": 0.0006626248359680176
+          "orig_proba": 0.9866654276847839,
+          "masked_proba": 0.98099285364151,
+          "delta": 0.005672574043273926
         },
         "blurred_source_probe": {
-          "orig_proba": 0.9998977184295654,
-          "blurred_proba": 0.7409284114837646,
-          "delta": 0.2589693069458008,
-          "still_confident_same_class": false
+          "orig_proba": 0.9866654276847839,
+          "blurred_proba": 0.8728317618370056,
+          "delta": 0.11383366584777832,
+          "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.470830720040666,
+        "attribution_in_lung_field_ratio": 0.5832792774033317,
         "lung_field_mask_is_approximate": true,
-        "relpath": "train/PNEUMONIA/person917_bacteria_2842.jpeg",
+        "relpath": "train/PNEUMONIA/person916_bacteria_2841.jpeg",
         "true_label": "PNEUMONIA"
       },
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.9934408068656921,
-          "masked_proba": 0.5329113602638245,
-          "delta": 0.4605294466018677
+          "orig_proba": 0.8550706505775452,
+          "masked_proba": 0.9727714657783508,
+          "delta": -0.11770081520080566
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.9934408068656921,
-          "masked_proba": 0.9675661325454712,
-          "delta": 0.025874674320220947
+          "orig_proba": 0.8550706505775452,
+          "masked_proba": 0.8726255893707275,
+          "delta": -0.017554938793182373
         },
         "blurred_source_probe": {
-          "orig_proba": 0.9934408068656921,
-          "blurred_proba": 0.7545744776725769,
-          "delta": 0.23886632919311523,
-          "still_confident_same_class": false
+          "orig_proba": 0.8550706505775452,
+          "blurred_proba": 0.9153158664703369,
+          "delta": -0.06024521589279175,
+          "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.47386097383568615,
+        "attribution_in_lung_field_ratio": 0.5846857194300974,
         "lung_field_mask_is_approximate": true,
         "relpath": "train/PNEUMONIA/person1470_bacteria_3830.jpeg",
         "true_label": "PNEUMONIA"
@@ -1013,22 +1044,22 @@
       {
         "method": "gradcam",
         "border_masking": {
-          "orig_proba": 0.9896646738052368,
-          "masked_proba": 0.7403591871261597,
-          "delta": 0.24930548667907715
+          "orig_proba": 0.9199819564819336,
+          "masked_proba": 0.9673622846603394,
+          "delta": -0.04738032817840576
         },
         "laterality_marker_masking": {
-          "orig_proba": 0.9896646738052368,
-          "masked_proba": 0.9389796257019043,
-          "delta": 0.05068504810333252
+          "orig_proba": 0.9199819564819336,
+          "masked_proba": 0.9231989979743958,
+          "delta": -0.003217041492462158
         },
         "blurred_source_probe": {
-          "orig_proba": 0.9896646738052368,
-          "blurred_proba": 0.7112246155738831,
-          "delta": 0.27844005823135376,
-          "still_confident_same_class": false
+          "orig_proba": 0.9199819564819336,
+          "blurred_proba": 0.921724259853363,
+          "delta": -0.0017423033714294434,
+          "still_confident_same_class": true
         },
-        "attribution_in_lung_field_ratio": 0.5332659878960547,
+        "attribution_in_lung_field_ratio": 0.5590508919149372,
         "lung_field_mask_is_approximate": true,
         "relpath": "train/PNEUMONIA/person1488_virus_2585.jpeg",
         "true_label": "PNEUMONIA"
@@ -1038,5 +1069,6 @@
       "status": "not_available",
       "reason": "Kermany ships no sex/age metadata in this repo -- deferred (A-2)"
     }
-  }
+  },
+  "encoding_note": "Non-finite floats (NaN/Inf) were rewritten as null on 2026-09-21 so this file is valid strict JSON. NaN appeared in sanity_checks.*.cascading_randomization.stages[].similarity_to_original, where it meant \"undefined\": the randomized model emits a constant heatmap and a rank correlation against a constant is undefined, not zero. The values themselves are unchanged; only the encoding is. src/xai_cxr/evaluation/sanity_checks.py now emits null directly."
 }
