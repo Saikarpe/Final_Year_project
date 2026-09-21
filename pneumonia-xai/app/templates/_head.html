@@ -1,0 +1,25 @@
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark light" />
+<title>{{ page_title }}</title>
+<meta name="description" content="{{ page_description }}" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650&display=swap" rel="stylesheet" />
+<script>
+  /* Applied before first paint so switching themes never flashes the other
+     one. Wrapped because localStorage throws outright in some privacy modes,
+     and a storage failure must not take the page down with it. */
+  (function () {
+    try {
+      var saved = localStorage.getItem('pneumoscan-theme');
+      if (saved === 'light' || saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', saved);
+      }
+    } catch (e) { /* no persisted preference available; dark default stands */ }
+  })();
+</script>
+<style>
+{% include '_style.html' %}
+{{ page_style }}
+</style>

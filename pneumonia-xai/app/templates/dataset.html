@@ -1,57 +1,57 @@
+{% set page_title = 'Dataset — PneumoScan AI Chest X-Ray Corpus' %}
+{% set page_description = 'Split breakdown, class distribution and sample images from the PneumoScan AI chest X-ray dataset.' %}
+{% set page_style %}
+  .norm{color:var(--green);font-weight:600}
+  .pneu{color:var(--red);font-weight:600}
+  .tot{font-weight:650}
+  /* Composition bar: the 3:1 class ratio is the single most important thing
+     about this corpus and a column of integers does not convey it. */
+  .ratio{display:flex;height:9px;border-radius:999px;overflow:hidden;border:1px solid var(--line);min-width:110px}
+  .ratio i{display:block;height:100%}
+  .ratio .n{background:var(--green)} .ratio .p{background:var(--red)}
+  .wide{padding:14px;margin-top:16px}
+  .wide h4{margin:0 0 10px;font-size:13.5px;font-weight:600}
+  .wide img{width:100%;display:block;border-radius:var(--radius-sm);border:1px solid var(--line);
+    background:var(--surface-2)}
+{% endset %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Dataset — PneumoScan AI Chest X-Ray Corpus</title>
-<meta name="description" content="Split breakdown, class distribution and sample images from the PneumoScan AI chest X-ray dataset." />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-<style>
-{% include '_style.html' %}
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin:30px 0 34px}
-  .stat{padding:22px;position:relative;overflow:hidden}
-  .stat::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;
-    background:linear-gradient(90deg,transparent,var(--cyan),transparent);box-shadow:0 0 14px var(--cyan)}
-  .stat span{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-  .stat b{display:block;margin-top:10px;font-size:34px;letter-spacing:-.03em;color:var(--cyan);
-    text-shadow:0 0 24px rgba(0,212,255,.6)}
-  .tbl{padding:6px;overflow:hidden;margin-bottom:34px}
-  .norm{color:var(--green);font-weight:600}
-  .pneu{color:var(--red);font-weight:600}
-  .tot{color:var(--cyan);font-weight:700}
-  .wide{padding:16px;margin-top:20px}
-  .wide h4{margin:0 0 12px;font-size:14px;font-weight:600}
-  .wide img{width:100%;display:block;border-radius:12px;border:1px solid var(--line);background:#070a12}
-  @media(max-width:960px){.stats{grid-template-columns:1fr 1fr}}
-  @media(max-width:520px){.stats{grid-template-columns:1fr}}
-</style>
+{% include '_head.html' %}
 </head>
 <body>
-<div class="grid-bg"></div>
-<div class="orbs" id="orbs"></div>
 {% include '_nav.html' %}
 
-<main class="wrap">
-  <h2 class="sec-title">Dataset Overview</h2>
+<main class="wrap" id="main">
+  <h2 class="sec-title">Dataset overview</h2>
   <p class="sec-sub">Chest X-ray corpus used to train and evaluate PneumoScan AI.</p>
-  <p class="note" style="margin-bottom:26px">Source: Kermany et al. paediatric chest X-ray collection (D-1) &mdash;
-    every image here is from paediatric patients (ages 1&ndash;5). This is <strong>not</strong> a general adult
-    chest X-ray dataset; see the model card before drawing any conclusion beyond this population.</p>
+
+  {% if missing_splits %}
+  <p class="note na" role="status"><strong>Split manifests missing:</strong>
+    {{ missing_splits|join(', ') }}. Run <code>python scripts/build_splits.py</code> after placing the
+    dataset at <code>dataset/chest_xray/</code>. The counts below cover only the manifests that exist.</p>
+  {% endif %}
+
+  <p class="note" style="margin:16px 0 22px">Source: Kermany et al. paediatric chest X-ray collection
+    (D-1) &mdash; every image here is from paediatric patients (ages 1&ndash;5). This is
+    <strong>not</strong> a general adult chest X-ray dataset; see the model card before drawing any
+    conclusion beyond this population.</p>
 
   <div class="stats">
-    <div class="glass stat"><span>Total Images</span><b>{{ dataset.total }}</b></div>
-    <div class="glass stat"><span>Normal</span><b>{{ dataset.normal }}</b></div>
-    <div class="glass stat"><span>Pneumonia</span><b>{{ dataset.pneumonia }}</b></div>
-    <div class="glass stat"><span>Classes</span><b>{{ dataset.classes }}</b></div>
+    <div class="card stat"><span>Total images</span><b>{{ dataset.total }}</b></div>
+    <div class="card stat"><span>Normal</span><b>{{ dataset.normal }}</b>
+      <small>{{ '%.1f'|format(dataset.normal / dataset.total * 100) if dataset.total else '0.0' }}%</small></div>
+    <div class="card stat"><span>Pneumonia</span><b>{{ dataset.pneumonia }}</b>
+      <small>{{ '%.1f'|format(dataset.pneumonia / dataset.total * 100) if dataset.total else '0.0' }}%</small></div>
+    <div class="card stat"><span>Classes</span><b>{{ dataset.classes }}</b></div>
   </div>
 
-  <h3 class="sec-title" style="font-size:20px">Split Breakdown</h3>
-  <p class="sec-sub">Patient-grouped splits (D-7) -- counts computed live from <code>configs/splits/*.txt</code>, never hardcoded.</p>
-  <div class="glass tbl">
+  <h3 class="sec-title">Split breakdown</h3>
+  <p class="sec-sub">Patient-grouped splits (D-7) &mdash; counts computed live from
+    <code>configs/splits/*.txt</code>, never hardcoded.</p>
+  <div class="card tbl">
     <table>
-      <thead><tr><th>Split</th><th>Normal</th><th>Pneumonia</th><th>Total</th></tr></thead>
+      <thead><tr><th>Split</th><th>Normal</th><th>Pneumonia</th><th>Total</th><th>Composition</th></tr></thead>
       <tbody>
         {% for s in splits %}
         <tr>
@@ -59,48 +59,48 @@
           <td class="norm">{{ s.normal }}</td>
           <td class="pneu">{{ s.pneumonia }}</td>
           <td class="tot">{{ s.total }}</td>
+          <td><span class="ratio" role="img"
+                aria-label="{{ s.normal }} normal, {{ s.pneumonia }} pneumonia">
+            <i class="n" style="width:{{ (s.normal / s.total * 100)|round(1) if s.total else 0 }}%"></i>
+            <i class="p" style="width:{{ (s.pneumonia / s.total * 100)|round(1) if s.total else 0 }}%"></i>
+          </span></td>
         </tr>
+        {% else %}
+        <tr><td colspan="5">No split manifests found.</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 
-  <div class="glass" style="padding:18px 22px;margin-bottom:34px">
+  {% if patient_disjoint is not none %}
+  <div style="margin-bottom:26px">
     {% if patient_disjoint %}
-    <p class="note" style="border-color:rgba(46,213,115,.35);color:#b6f5cf">&#10003; Patient-disjointness check: <strong>passing</strong> -- no patient/study id appears in more than one split.</p>
+    <p class="note ok">&#10003; Patient-disjointness check: <strong>passing</strong> &mdash; no
+      patient/study id appears in more than one split.</p>
     {% else %}
-    <p class="note na">&#9888; Patient-disjointness check: <strong>failing</strong> -- overlap detected between splits. Re-run <code>scripts/build_splits.py</code>.</p>
+    <p class="note na">&#9888; Patient-disjointness check: <strong>failing</strong> &mdash; overlap
+      detected between splits. Re-run <code>scripts/build_splits.py</code>.</p>
     {% endif %}
   </div>
+  {% endif %}
 
-  <h3 class="sec-title" style="font-size:20px">Class Distribution</h3>
-  <p class="sec-sub">Balance of normal vs pneumonia cases.</p>
+  <h3 class="sec-title">Class distribution</h3>
+  <p class="sec-sub">Balance of normal vs pneumonia cases. The ~3:1 ratio is handled at training time
+    with class weights, not by resampling.</p>
   <div class="plots">
-    <div class="glass plot"><h4>Class Distribution</h4><img src="/static/plots/class_distribution.png" alt="Class distribution chart" /></div>
-    <div class="glass plot"><h4>Class Proportions</h4><img src="/static/plots/class_pie.png" alt="Class proportion pie chart" /></div>
+    <div class="card plot"><h4>Class distribution</h4>
+      <img src="/static/plots/class_distribution.png" alt="Class distribution chart" loading="lazy" /></div>
+    <div class="card plot"><h4>Class proportions</h4>
+      <img src="/static/plots/class_pie.png" alt="Class proportion pie chart" loading="lazy" /></div>
   </div>
 
-  <h3 class="sec-title" style="font-size:20px;margin-top:34px">Sample X-Rays</h3>
+  <h3 class="sec-title" style="margin-top:34px">Sample X-rays</h3>
   <p class="sec-sub">Representative images drawn from both classes.</p>
-  <div class="glass wide">
-    <h4>Sample Images</h4>
-    <img src="/static/plots/sample_images.png" alt="Grid of sample chest X-ray images" />
+  <div class="card wide">
+    <h4>Sample images</h4>
+    <img src="/static/plots/sample_images.png" alt="Grid of sample chest X-ray images" loading="lazy" />
   </div>
 </main>
-<p class="foot">PneumoScan AI &middot; For research and educational use only. Not a substitute for professional medical diagnosis.</p>
-<script>
-(function(){
-  var o=document.getElementById('orbs');
-  for(var i=0;i<26;i++){
-    var s=document.createElement('i'),d=2+Math.random()*4;
-    s.style.width=s.style.height=d+'px';
-    s.style.left=(Math.random()*100)+'%';
-    s.style.animationDuration=(12+Math.random()*18)+'s';
-    s.style.animationDelay=(-Math.random()*25)+'s';
-    if(i%4===0){s.style.background='#2ed573';s.style.boxShadow='0 0 12px 2px rgba(46,213,115,.5)';}
-    o.appendChild(s);
-  }
-})();
-</script>
+{% include '_foot.html' %}
 </body>
 </html>

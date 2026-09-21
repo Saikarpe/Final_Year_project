@@ -1,72 +1,184 @@
+  /* ─────────────────────────────────────────────────────────────────────
+     PneumoScan design tokens.
+
+     Dark is the default because this is a radiograph reader and a bright
+     chrome around a greyscale image destroys the perceived contrast of the
+     image itself -- the same reason reading rooms are dark. Light is a real
+     alternative (projectors, print, shared screens), not an afterthought, so
+     every colour below is defined twice and nothing is hardcoded downstream.
+
+     What was removed, deliberately: the animated grid background, the 26
+     floating neon orbs, the pulsing dropzone border and the button scanline.
+     They cost a repaint every frame next to the one image on the page the
+     user is meant to be studying, and they read as a demo rather than as an
+     instrument.
+     ───────────────────────────────────────────────────────────────────── */
   :root{
-    --bg:#0a0e1a; --bg2:#0d1322; --cyan:#00d4ff; --red:#ff4757; --green:#2ed573; --amber:#ffb020;
-    --glass:rgba(255,255,255,.05); --line:rgba(255,255,255,.12); --ink:#e8f1ff; --muted:#8ea0bd;
+    --bg:#0b0f16; --surface:#131a24; --surface-2:#1a2330; --line:#243141;
+    --ink:#e6edf6; --muted:#93a4bb; --faint:#6b7d95;
+    --accent:#3ea8ff; --accent-soft:rgba(62,168,255,.12); --accent-line:rgba(62,168,255,.38);
+    --red:#ff6b6b; --red-soft:rgba(255,107,107,.12);
+    --green:#39d98a; --green-soft:rgba(57,217,138,.12);
+    --amber:#ffb454; --amber-soft:rgba(255,180,84,.12);
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.28);
+    --radius:14px; --radius-sm:10px;
+    --focus:0 0 0 2px var(--bg),0 0 0 4px var(--accent);
+    color-scheme:dark;
   }
+  :root[data-theme="light"]{
+    --bg:#f4f6fa; --surface:#ffffff; --surface-2:#eef2f8; --line:#d8e0ec;
+    --ink:#101923; --muted:#526580; --faint:#7286a0;
+    --accent:#0b69c7; --accent-soft:rgba(11,105,199,.09); --accent-line:rgba(11,105,199,.3);
+    --red:#c72f3d; --red-soft:rgba(199,47,61,.09);
+    --green:#12794e; --green-soft:rgba(18,121,78,.1);
+    --amber:#9a6108; --amber-soft:rgba(154,97,8,.12);
+    --shadow:0 1px 2px rgba(16,25,35,.06),0 6px 18px rgba(16,25,35,.08);
+    color-scheme:light;
+  }
+
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Space Grotesk',Inter,system-ui,sans-serif;
-    -webkit-font-smoothing:antialiased;overflow-x:hidden}
-  a{color:inherit;text-decoration:none}
-  .grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
-    background-image:linear-gradient(rgba(0,212,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.07) 1px,transparent 1px);
-    background-size:54px 54px;mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,#000 30%,transparent 75%);
-    animation:gridMove 22s linear infinite}
-  @keyframes gridMove{to{background-position:54px 54px,54px 54px}}
-  .orbs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-  .orbs i{position:absolute;display:block;border-radius:50%;background:var(--cyan);opacity:.35;
-    box-shadow:0 0 12px 2px rgba(0,212,255,.6);animation:float linear infinite}
-  @keyframes float{0%{transform:translateY(110vh) scale(.6);opacity:0}
-    10%{opacity:.5}90%{opacity:.4}100%{transform:translateY(-10vh) scale(1);opacity:0}}
-  nav{position:sticky;top:0;z-index:30;background:rgba(10,14,26,.72);backdrop-filter:blur(14px);
-    border-bottom:1px solid var(--line)}
-  .nav-in{max-width:1180px;margin:0 auto;padding:14px 22px;display:flex;align-items:center;gap:14px}
-  .logo{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;flex:none;
-    background:linear-gradient(135deg,rgba(0,212,255,.25),rgba(0,212,255,.05));border:1px solid rgba(0,212,255,.4);
-    box-shadow:0 0 18px rgba(0,212,255,.35)}
-  .logo svg{width:20px;height:20px;stroke:var(--cyan);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-  .brand{font-weight:700;letter-spacing:.02em;font-size:17px}
-  .brand b{color:var(--cyan);text-shadow:0 0 14px rgba(0,212,255,.7)}
-  .links{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
-  .links a{padding:8px 15px;border-radius:9px;font-size:14px;color:var(--muted);transition:.18s}
-  .links a:hover,.links a.on{color:var(--cyan);background:rgba(0,212,255,.09);box-shadow:inset 0 0 0 1px rgba(0,212,255,.3)}
-  .wrap{position:relative;z-index:2;max-width:1180px;margin:0 auto;padding:56px 22px 90px}
-  .glass{background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--line);
-    border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
-  h1{font-size:clamp(34px,6vw,60px);margin:0 0 14px;letter-spacing:-.03em;line-height:1.05;text-align:center}
-  .glow{color:#fff;text-shadow:0 0 8px rgba(0,212,255,.9),0 0 30px rgba(0,212,255,.6),0 0 70px rgba(0,212,255,.35)}
-  .sub{text-align:center;color:var(--muted);max-width:620px;margin:0 auto;font-size:16.5px;line-height:1.65}
-  .sec-title{font-size:26px;letter-spacing:-.02em;margin:0 0 6px}
-  .sec-sub{color:var(--muted);margin:0 0 26px;font-size:14.5px}
-  table{width:100%;border-collapse:collapse;font-size:14.5px}
-  th,td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--line)}
-  th{color:var(--cyan);font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code,.mono{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;font-size:.92em}
+
+  /* Every interactive element gets a visible keyboard ring. The previous
+     stylesheet had none, so tabbing through the page was invisible. */
+  :focus-visible{outline:none;box-shadow:var(--focus);border-radius:6px}
+  .skip{position:absolute;left:-9999px;top:0;z-index:100;padding:10px 16px;
+    background:var(--surface);border:1px solid var(--accent-line);border-radius:0 0 8px 0}
+  .skip:focus{left:0}
+
+  /* Animation is opt-out at the OS level, not just tasteful by default. */
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;
+      transition-duration:.001ms !important;scroll-behavior:auto !important}
+  }
+
+  /* ── Navigation ───────────────────────────────────────────────────── */
+  nav{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);
+    backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .nav-in{max-width:1180px;margin:0 auto;padding:11px 22px;display:flex;align-items:center;gap:12px}
+  .logo{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex:none;
+    background:var(--accent-soft);border:1px solid var(--accent-line)}
+  .logo svg{width:18px;height:18px;stroke:var(--accent);fill:none;stroke-width:1.8;
+    stroke-linecap:round;stroke-linejoin:round}
+  .brand{font-weight:650;letter-spacing:-.01em;font-size:15.5px;color:var(--ink)}
+  .brand b{font-weight:650;color:var(--accent)}
+  .links{margin-left:auto;display:flex;gap:2px;flex-wrap:wrap;align-items:center}
+  .links a{padding:7px 13px;border-radius:8px;font-size:14px;color:var(--muted);
+    text-decoration:none;transition:background .15s,color .15s;white-space:nowrap}
+  .links a:hover{color:var(--ink);background:var(--surface-2);text-decoration:none}
+  .links a.on{color:var(--accent);background:var(--accent-soft);font-weight:550}
+  .theme-btn{margin-left:8px;width:34px;height:34px;flex:none;display:grid;place-items:center;
+    border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--muted);
+    cursor:pointer;transition:.15s}
+  .theme-btn:hover{color:var(--ink);border-color:var(--accent-line)}
+  .theme-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;
+    stroke-linecap:round;stroke-linejoin:round}
+  :root:not([data-theme="light"]) .theme-btn .i-sun{display:none}
+  :root[data-theme="light"] .theme-btn .i-moon{display:none}
+
+  /* ── Layout ───────────────────────────────────────────────────────── */
+  .wrap{max-width:1180px;margin:0 auto;padding:42px 22px 80px}
+  .card,.glass{background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius);box-shadow:var(--shadow)}
+  h1{font-size:clamp(28px,4.5vw,40px);margin:0 0 12px;letter-spacing:-.025em;line-height:1.15}
+  .glow{color:var(--ink)}
+  .sub{color:var(--muted);max-width:60ch;font-size:16px}
+  .hero h1,.hero .sub{text-align:center}
+  .hero .sub{margin:0 auto}
+  .sec-title{font-size:21px;letter-spacing:-.02em;margin:0 0 4px;font-weight:650}
+  .sec-sub{color:var(--muted);margin:0 0 20px;font-size:14px;max-width:80ch}
+  h3.sec-title{margin-top:34px}
+
+  /* ── Tables ───────────────────────────────────────────────────────── */
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;
+    position:sticky;top:0;background:var(--surface);z-index:1}
+  td{font-variant-numeric:tabular-nums}
   tbody tr:last-child td{border-bottom:0}
-  tbody tr:hover{background:rgba(0,212,255,.05)}
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;border:1px solid rgba(0,212,255,.45);
-    position:relative;overflow:hidden;font:inherit;font-weight:600;font-size:15.5px;padding:15px 26px;border-radius:13px;
-    background:linear-gradient(135deg,rgba(0,212,255,.22),rgba(0,212,255,.06));color:var(--cyan);
-    box-shadow:0 0 22px rgba(0,212,255,.25);transition:.2s}
-  .btn:hover{box-shadow:0 0 38px rgba(0,212,255,.55);transform:translateY(-1px)}
-  .btn::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;
-    background:linear-gradient(90deg,transparent,rgba(0,212,255,.45),transparent);transform:skewX(-20deg);opacity:0}
-  .btn:hover::after{opacity:1;animation:scanline .9s ease-in-out infinite}
-  @keyframes scanline{0%{left:-60%}100%{left:120%}}
-  .full{width:100%;margin-top:20px}
-  .foot{margin-top:44px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.7;position:relative;z-index:2}
-  .plots{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-  .plot{padding:16px}
-  .plot h4{margin:0 0 12px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
-  .plot img{width:100%;display:block;border-radius:12px;background:#070a12;border:1px solid var(--line)}
-  .tip{position:relative;display:inline-grid;place-items:center;width:17px;height:17px;border-radius:50%;
-    background:rgba(0,212,255,.15);color:var(--cyan);font-size:11px;font-weight:700;cursor:help}
-  .tip span{visibility:hidden;opacity:0;transition:.15s;position:absolute;bottom:140%;left:50%;transform:translateX(-50%);
-    width:220px;padding:10px 12px;border-radius:10px;background:#101827;border:1px solid var(--line);
-    color:var(--ink);font-weight:400;font-size:12px;line-height:1.5;text-align:left;z-index:9}
-  .tip:hover span{visibility:visible;opacity:1}
-  .pill{display:inline-block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;
-    border-radius:999px;border:1px solid var(--line);color:var(--muted)}
-  .pill.na{color:var(--amber);border-color:rgba(255,176,32,.4);background:rgba(255,176,32,.08)}
-  .note{padding:14px 16px;border-radius:12px;font-size:13.5px;line-height:1.6;color:var(--muted);
-    background:rgba(255,255,255,.03);border:1px solid var(--line)}
-  .note.na{color:#ffd699;background:rgba(255,176,32,.08);border-color:rgba(255,176,32,.35)}
-  @media(max-width:820px){.plots{grid-template-columns:1fr}.wrap{padding:34px 16px 64px}}
+  tbody tr:hover{background:var(--surface-2)}
+  .tbl{padding:0;overflow:auto;margin-bottom:26px;max-height:70vh}
+
+  /* ── Buttons ──────────────────────────────────────────────────────── */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;
+    font:inherit;font-weight:550;font-size:14.5px;padding:11px 20px;border-radius:var(--radius-sm);
+    border:1px solid var(--accent-line);background:var(--accent);color:#fff;
+    transition:filter .15s,transform .05s}
+  .btn:hover{filter:brightness(1.08);text-decoration:none}
+  .btn:active{transform:translateY(1px)}
+  .btn[disabled],.btn[aria-busy="true"]{opacity:.6;cursor:progress;pointer-events:none}
+  .btn.ghost{background:var(--surface);color:var(--ink);border-color:var(--line)}
+  .btn.ghost:hover{border-color:var(--accent-line);color:var(--accent)}
+  .btn.small{padding:8px 14px;font-size:13.5px}
+  .btn.agree{background:transparent;color:var(--green);border-color:var(--green)}
+  .btn.disagree{background:transparent;color:var(--red);border-color:var(--red)}
+  .full{width:100%;margin-top:16px}
+
+  select,input[type=text],textarea{background:var(--surface-2);color:var(--ink);
+    border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit;font-size:13.5px}
+  input[type=range]{accent-color:var(--accent)}
+  label{font-size:13px;color:var(--muted)}
+
+  /* ── Status pills, notes, tooltips ────────────────────────────────── */
+  .pill{display:inline-block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+    padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-weight:600}
+  .pill.na{color:var(--amber);border-color:var(--amber);background:var(--amber-soft)}
+  .pill.ok{color:var(--green);border-color:var(--green);background:var(--green-soft)}
+  /* A value that has no defined number, e.g. a rank correlation against a
+     constant heatmap. Deliberately not styled like a 0. */
+  td > .na{color:var(--faint);font-style:italic;font-size:13px;cursor:help}
+  .note{padding:12px 14px;border-radius:var(--radius-sm);font-size:13.5px;line-height:1.6;
+    color:var(--muted);background:var(--surface-2);border:1px solid var(--line)}
+  .note.na{color:var(--ink);background:var(--amber-soft);border-color:var(--amber)}
+  .note.ok{color:var(--ink);background:var(--green-soft);border-color:var(--green)}
+  .err{margin-top:14px;padding:12px 14px;border-radius:var(--radius-sm);font-size:14px;
+    background:var(--red-soft);border:1px solid var(--red);color:var(--ink)}
+
+  .tip{position:relative;display:inline-grid;place-items:center;width:16px;height:16px;
+    border-radius:50%;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);
+    font-size:10.5px;font-weight:700;cursor:help}
+  .tip span{visibility:hidden;opacity:0;transition:opacity .12s;position:absolute;bottom:150%;left:50%;
+    transform:translateX(-50%);width:230px;padding:9px 11px;border-radius:9px;background:var(--surface-2);
+    border:1px solid var(--line);box-shadow:var(--shadow);color:var(--ink);font-weight:400;font-size:12px;
+    line-height:1.5;text-align:left;z-index:9}
+  .tip:hover span,.tip:focus-visible span{visibility:visible;opacity:1}
+
+  /* ── Stat cards ───────────────────────────────────────────────────── */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:22px 0 30px}
+  .stat{padding:16px 18px}
+  .stat span{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+    font-weight:600;display:block}
+  .stat b{display:block;margin-top:8px;font-size:28px;letter-spacing:-.03em;color:var(--ink);
+    font-variant-numeric:tabular-nums;font-weight:620}
+  .stat small{display:block;margin-top:3px;color:var(--faint);font-size:11.5px}
+
+  /* ── Plots ────────────────────────────────────────────────────────── */
+  .plots{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .plot{padding:14px}
+  .plot h4{margin:0 0 10px;font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:7px}
+  .plot img{width:100%;display:block;border-radius:var(--radius-sm);background:var(--surface-2);
+    border:1px solid var(--line)}
+
+  /* ── Spinner ──────────────────────────────────────────────────────── */
+  .spin{width:15px;height:15px;border-radius:50%;border:2px solid currentColor;
+    border-top-color:transparent;animation:spin .7s linear infinite;flex:none}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+  .foot{margin:0;padding:26px 22px 40px;text-align:center;color:var(--faint);font-size:12.5px;
+    line-height:1.7;border-top:1px solid var(--line)}
+
+  @media(max-width:960px){.stats{grid-template-columns:1fr 1fr}}
+  @media(max-width:820px){
+    .plots{grid-template-columns:1fr}
+    .wrap{padding:28px 16px 56px}
+    .nav-in{padding:10px 16px;flex-wrap:wrap}
+    .links{margin-left:0;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  }
+  @media(max-width:520px){.stats{grid-template-columns:1fr}}

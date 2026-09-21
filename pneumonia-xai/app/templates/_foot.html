@@ -1,0 +1,17 @@
+<footer class="foot">
+  PneumoScan AI &middot; For research and educational use only. Not a substitute for professional
+  medical diagnosis. Trained on a paediatric (ages 1&ndash;5) corpus &mdash; see the
+  <a href="/dataset">dataset page</a> and model card before generalising.
+</footer>
+<script>
+  (function () {
+    var btn = document.getElementById('themeBtn');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var root = document.documentElement;
+      var next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('pneumoscan-theme', next); } catch (e) { /* not persisted */ }
+    });
+  })();
+</script>
