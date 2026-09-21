@@ -1,0 +1,42 @@
+# GPU training environment (Windows + NVIDIA), SEPARATE from requirements.txt.
+#
+# Why this file exists
+# --------------------
+# TensorFlow dropped native-Windows GPU support after 2.10, and TF 2.10 only
+# supports Python <= 3.10. So on Windows the app/tests (TF 2.13, Python 3.11,
+# requirements.txt) and GPU training (TF 2.10, Python 3.10, this file) cannot
+# share one environment. On Linux, or under WSL2, use requirements.txt for
+# both and ignore this file.
+#
+# A checkpoint trained here loads correctly in the TF 2.13 environment --
+# verified, not assumed (see docs/decisions_log.md).
+#
+# Setup with micromamba (no admin rights needed; the Miniconda installer was
+# blocked by antivirus on the machine this was built for):
+#
+#   micromamba create -n tfgpu -c conda-forge python=3.10 cudatoolkit=11.2 cudnn=8.1.0
+#   <env>/python.exe -m pip install -r requirements-gpu.txt
+#
+# IMPORTANT: on Windows, Python 3.8+ does not resolve extension-module DLLs
+# via PATH, and `os.add_dll_directory` is not enough for TensorFlow's loader.
+# Launch training through a wrapper that sets a real Windows PATH first:
+#
+#   set "PATH=<env>\Library\bin;<env>\Library\lib;<env>;%PATH%"
+#   "<env>\python.exe" scripts/train.py
+#
+# Without that, TF reports no GPU even though every CUDA DLL is present.
+
+tensorflow==2.10.1
+tensorflow-addons==0.19.0   # supplies AdamW; keras.optimizers.AdamW is 2.11+
+
+# Version ceilings forced by TF 2.10:
+numpy==1.23.5               # TF 2.10 requires numpy < 1.24
+protobuf<3.20               # TF 2.10 requires protobuf < 3.20
+opencv-python==4.8.1.78     # 4.12 requires numpy >= 2, incompatible with the above
+shap==0.44.1                # 0.51 requires a newer numpy
+
+scikit-learn==1.3.2
+scipy==1.10.1
+matplotlib==3.7.3
+Pillow==10.4.0
+PyYAML==6.0.2

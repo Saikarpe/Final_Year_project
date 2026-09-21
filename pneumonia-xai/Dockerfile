@@ -23,4 +23,10 @@ RUN pip install --no-cache-dir -e .
 
 ENV FLASK_ENV=production
 EXPOSE 5000
+
+# /healthz loads the checkpoint and reports whether it is usable, so an image
+# started without a mounted model is reported unhealthy rather than serving a
+# page that 500s on the first upload.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3     CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:5000/healthz').status==200 else 1)"
+
 CMD ["python", "app/app.py"]

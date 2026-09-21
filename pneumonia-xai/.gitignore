@@ -9,6 +9,10 @@ __MACOSX/
 models/*.h5
 !models/.gitkeep
 
+# The archived pre-M-1b VGG16 evaluation IS committed on purpose: it is the
+# only record of that model's numbers and is not being regenerated.
+!models/baseline_vgg16_*/
+
 # Runtime artefacts
 app/static/uploads/*
 !app/static/uploads/.gitkeep
