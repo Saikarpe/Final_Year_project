@@ -91,7 +91,17 @@
           "n": 236
         }
       ],
-      "brier_score": 0.06299667491429943
+      "brier_score": 0.06299667491429943,
+      "temperature_scaling": {
+        "temperature": 0.7178729718634773,
+        "fitted_on": "calibration",
+        "n_calibration": 563,
+        "brier_before": 0.06299659885897839,
+        "brier_after": 0.062356384079475656,
+        "ece_before": 0.12493057459988074,
+        "ece_after": 0.10648940240017253,
+        "note": "Fitted on the calibration split, evaluated on test. Strictly monotonic, so AUROC and every ranking metric are unchanged. The reported brier_score and decision_threshold above are on the RAW probability scale and are deliberately left as they were."
+      }
     },
     "decision_threshold": 0.3447483777999878,
     "n_test": 582,
@@ -214,39 +224,39 @@
             },
             {
               "stage": "logits",
-              "similarity_to_original": 0.4770218161457078
+              "similarity_to_original": 0.47702242748255974
             },
             {
               "stage": "dense",
-              "similarity_to_original": -0.3351616261224593
+              "similarity_to_original": -0.3351615539682442
             },
             {
               "stage": "head_bn",
-              "similarity_to_original": null
+              "similarity_to_original": -0.3315198156980197
             },
             {
               "stage": "pool",
-              "similarity_to_original": null
+              "similarity_to_original": -0.38177890229001066
             },
             {
               "stage": "backbone_group_1/5",
-              "similarity_to_original": null
+              "similarity_to_original": 0.20837441568802748
             },
             {
               "stage": "backbone_group_2/5",
-              "similarity_to_original": null
+              "similarity_to_original": 0.2352832637770052
             },
             {
               "stage": "backbone_group_3/5",
-              "similarity_to_original": null
+              "similarity_to_original": 0.23961092496954167
             },
             {
               "stage": "backbone_group_4/5",
-              "similarity_to_original": null
+              "similarity_to_original": 0.26443941633951146
             },
             {
               "stage": "backbone_group_5/5",
-              "similarity_to_original": null
+              "similarity_to_original": 0.2302587366490575
             }
           ]
         },
@@ -268,39 +278,39 @@
             },
             {
               "stage": "logits",
-              "similarity_to_original": 0.7732965644382985
+              "similarity_to_original": 0.7733345622237214
             },
             {
               "stage": "dense",
-              "similarity_to_original": 0.7513855756651143
+              "similarity_to_original": 0.7514129720619915
             },
             {
               "stage": "head_bn",
-              "similarity_to_original": null
+              "similarity_to_original": 0.7508810997815886
             },
             {
               "stage": "pool",
-              "similarity_to_original": null
+              "similarity_to_original": 0.6881165468036943
             },
             {
               "stage": "backbone_group_1/5",
-              "similarity_to_original": null
+              "similarity_to_original": 0.6319223877798539
             },
             {
               "stage": "backbone_group_2/5",
-              "similarity_to_original": null
+              "similarity_to_original": 0.6758411427194745
             },
             {
               "stage": "backbone_group_3/5",
-              "similarity_to_original": null
+              "similarity_to_original": 0.6734556335286186
             },
             {
               "stage": "backbone_group_4/5",
-              "similarity_to_original": null
+              "similarity_to_original": 0.6721850550093318
             },
             {
               "stage": "backbone_group_5/5",
-              "similarity_to_original": null
+              "similarity_to_original": 0.6286130818097128
             }
           ]
         },
@@ -312,7 +322,9 @@
           "note": "proxy: head refit on shuffled labels, backbone frozen and unchanged"
         }
       }
-    }
+    },
+    "recomputed_at": "2026-09-21T06:07:31Z",
+    "recomputed_note": "Only the sanity_checks block was recomputed, after the BatchNorm randomization fix; every other field is from the run stamped in generated_at. Cascading randomization previously reported undefined for every stage from head_bn down, because zeroing a BatchNorm gamma makes the layer emit a constant and the heatmap degenerate. The label-randomization proxy is unchanged by that fix and was not rerun."
   },
   "runtime": {
     "attention": {

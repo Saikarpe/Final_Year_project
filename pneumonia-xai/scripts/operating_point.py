@@ -26,13 +26,21 @@ import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-CACHE = os.path.join(REPO, 'runs', 'test_scores.npz')
+def cache_path(split: str) -> str:
+    return os.path.join(REPO, 'runs', f'{split}_scores.npz')
 
 
-def _load_scores():
-    """Cached (scores, labels, relpaths) for the test split, in manifest order."""
-    if os.path.exists(CACHE):
-        d = np.load(CACHE, allow_pickle=True)
+def load_scores(split: str = 'test'):
+    """Cached (scores, labels, relpaths) for a split, in manifest order.
+
+    Inference over a split costs minutes and several scripts want the same
+    numbers, so the first caller pays and writes runs/<split>_scores.npz.
+    Manifest order is load-bearing (see load_split_dataset), which is what
+    makes the cached arrays safe to zip against the manifest later.
+    """
+    path = cache_path(split)
+    if os.path.exists(path):
+        d = np.load(path, allow_pickle=True)
         return d['scores'], d['labels'], d['relpaths']
 
     from xai_cxr.config import DataConfig, ModelConfig
@@ -41,13 +49,17 @@ def _load_scores():
 
     data_cfg, model_cfg = DataConfig.load(), ModelConfig.load()
     model = load_trained(model_cfg.model_path)
-    ds, labels = load_split_dataset('test', data_cfg)
+    ds, labels = load_split_dataset(split, data_cfg)
     scores = model.predict(ds, verbose=1).reshape(-1)
-    relpaths = np.array([r for r, _ in read_manifest('test')])
-    os.makedirs(os.path.dirname(CACHE), exist_ok=True)
-    np.savez_compressed(CACHE, scores=scores, labels=labels, relpaths=relpaths)
-    print(f'cached -> {CACHE}')
+    relpaths = np.array([r for r, _ in read_manifest(split)])
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    np.savez_compressed(path, scores=scores, labels=labels, relpaths=relpaths)
+    print(f'cached -> {path}')
     return scores, labels, relpaths
+
+
+def _load_scores():
+    return load_scores('test')
 
 
 def counts_at(scores, labels, thr):

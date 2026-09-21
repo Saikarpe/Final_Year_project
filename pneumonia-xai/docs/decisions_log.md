@@ -608,3 +608,126 @@ network -- is **not** something this run demonstrates, and the write-up should
 not claim it. Recovering the deeper stages needs a randomization scheme that
 preserves activation scale, e.g. resampling BatchNorm parameters from their
 fitted distribution instead of from a fresh initializer. Not attempted.
+
+## 2026-09-21 -- The cascading randomization test was broken by its own BatchNorm handling
+
+Fixing the NaN reporting (entry above) exposed that the NaNs were not an
+inherent property of the test. They were a bug in `_randomize_layer`.
+
+**Cause.** The randomizer redrew any weight with `ndim > 1` from N(0, 0.05)
+and zeroed everything else -- a reasonable rule for kernels and biases.
+BatchNormalization's four weights (gamma, beta, moving_mean, moving_variance)
+are all 1-D, so the rule set **gamma = 0**. A BN layer with gamma = 0 emits
+beta for every channel, i.e. a constant. From the first BN in the cascade
+downwards every heatmap was flat, so every rank correlation was undefined --
+7 of 10 stages, on both methods.
+
+**Fix.** BatchNormalization is now handled separately: gamma and beta are
+**permuted across channels**, and the moving statistics are left alone.
+Permutation destroys the learned per-channel correspondence (which is what the
+test probes) while preserving the distribution of scales exactly, so the
+activations stay in a regime where an explanation is still defined. The moving
+statistics are dataset statistics, not learned parameters, so Adebayo et al.'s
+"randomize the learned weights" gives no licence to touch them.
+
+Re-running the cascade (`python scripts/refresh_sanity_checks.py --write`,
+which recomputes only this block rather than burning a 40 min full evaluate)
+gives all 10 stages defined for both methods:
+
+| stage | Grad-CAM | Integrated Gradients |
+|---|---|---|
+| original | +1.000 | +1.000 |
+| logits | +0.477 | +0.773 |
+| dense | **-0.335** | +0.751 |
+| head_bn | -0.332 | +0.751 |
+| pool | -0.382 | +0.688 |
+| backbone 1/5 | +0.208 | +0.632 |
+| backbone 5/5 | +0.230 | **+0.629** |
+
+**This is now a real result, and it is not a flattering one for IG.**
+
+- **Grad-CAM passes.** Similarity collapses immediately and stays near zero or
+  negative for the rest of the cascade. Its explanation depends on the trained
+  weights, which is what E-8 is asking.
+- **Integrated Gradients largely fails.** With *every layer in the network
+  randomized* its attribution map still correlates at +0.63 with the map from
+  the trained model. An explanation that survives the destruction of the model
+  it claims to explain is substantially describing the input, not the model --
+  this is exactly the failure Adebayo et al. (2018) report for
+  gradient-and-input-style methods, which behave partly as edge detectors.
+
+The label-randomization proxy told the same story all along (Grad-CAM 0.266,
+IG 0.683) and is unaffected by this fix, so it was not rerun.
+
+**Consequence for the write-up.** IG should not be presented as a trustworthy
+explanation for this model on the strength of its faithfulness numbers. Note
+that it also has the *worst* deletion AUC in the benchmark (0.908, against
+Grad-CAM's 0.610) -- two independent diagnostics agreeing. Grad-CAM is both
+the cheapest method (0.7 s vs 3.5 s) and the one that passes both.
+
+## 2026-09-21 -- Temperature scaling recovers calibration error, but not the Brier gap
+
+M-1b's Brier score regressed against the baseline (0.047 -> 0.063), so the
+obvious cheap fix was temperature scaling (Guo et al. 2017): one scalar T
+dividing the logit, fitted by NLL on held-out data.
+
+Implemented in `src/xai_cxr/evaluation/calibration.py`, fitted on the
+**calibration** split and evaluated on test (`scripts/calibrate.py`), and
+wired into `evaluate.py` so future runs produce it without a second inference
+pass over the 563 calibration images.
+
+| metric (test) | before | after | change |
+|---|---|---|---|
+| Brier | 0.0630 | 0.0624 | **-1.0%** |
+| ECE | 0.1249 | 0.1065 | **-14.8%** |
+
+Fitted **T = 0.718**, which *sharpens* rather than softens. That direction is
+the informative part: the model is **under**-confident, which is the expected
+consequence of training with label smoothing. The usual intuition that a
+fine-tuned network is over-confident does not hold here.
+
+**The honest conclusion is that this did not fix what it was reached for.**
+ECE -- the part temperature scaling can actually move -- improves by a useful
+15%. Brier barely moves. Brier decomposes into calibration plus refinement,
+and the residual is refinement: the 26 missed pneumonias are confidently
+wrong, and no monotonic rescaling of the probability axis can help a case that
+is on the wrong side of the decision boundary. So the Brier gap against the
+baseline is **not** a calibration-scale artefact, and should not be reported
+as one.
+
+**Deliberately not applied to the headline numbers.** The reported
+`brier_score` and `decision_threshold` stay on the raw probability scale;
+the fitted temperature is recorded alongside them under
+`classification.calibration.temperature_scaling`. Restating the headline on a
+rescaled axis would make this run incomparable with the archived baseline, and
+the threshold would silently stop meaning what it meant when it was tuned.
+Temperature scaling is monotonic, so AUROC and every ranking metric are
+unchanged by construction -- asserted in `tests/test_calibration.py`.
+
+## 2026-09-21 -- Mobile layout, finally verified (and one real bug)
+
+The mobile layout had been "written but unseen" across two sessions because
+the browser tooling was unavailable. Verified this session with headless
+Chrome instead, which needs one trick worth recording:
+`chrome --headless --window-size=360,...` **does not** give a 360px viewport.
+Chrome clamps the window to roughly 500px wide on Windows and then simply
+crops the screenshot, which looks exactly like a horizontal-overflow bug and
+sent this investigation down a false trail once already. Rendering the app
+inside a `360px`-wide `<iframe>` on a wider page gives the inner document a
+genuine 360px viewport, and media queries respond to it correctly.
+
+All five pages check out at 360px: the stats grid collapses 4 -> 2 -> 1, plots
+go single-column, the nav wraps and its link row scrolls, and every table sits
+in an `overflow:auto` card.
+
+**One real bug found and fixed.** The dashboard's "Evaluated model" line
+prints an absolute `model_path`. A Windows path offers break opportunities
+only at its backslashes, and one segment is wider than a 360px viewport, so
+the line overflowed horizontally.
+
+The first fix -- `overflow-wrap:anywhere` on `code` globally -- was **wrong**
+and is worth recording as a near-miss: the audit log's timestamps are
+monospace too, and breaking those anywhere shattered each one into seven
+lines down a narrow column instead of wrapping cleanly at the hyphen. The
+shipped rule is scoped to `.meta code`, which is used on exactly that one
+dashboard line.

@@ -184,20 +184,20 @@ five times in a row. Now one knob — `inference_batch` in
 - [x] ~~Finish `evaluate.py` + `audit.py`~~ — done, see §3
 - [x] ~~Report test AUROC vs the baseline~~ — done, see §9
 - [x] ~~Restart the app on the real model; confirm the stale banner clears~~
-- [x] ~~Final full test-suite run~~ — 47 passed in 234 s
-- [ ] **Mobile layout still never verified visually.** The Chrome extension
-      was not connected this session either, so `resize_window` could not run.
-      What *was* checked statically: breakpoints at 960/820/520 px exist and
-      are coherent (stats grid 4→2→1 columns, plots to 1 column, nav links
-      scroll horizontally), all six tables sit inside `.tbl` (`overflow:auto`),
-      and the only fixed-width rule is a 230 px tooltip, which fits a 360 px
-      viewport. That is evidence, not verification — it does not rule out
-      overlap, clipping or tap-target problems. Open it on a phone.
+- [x] ~~Final full test-suite run~~ — **59 passed**
+- [x] ~~Mobile layout never verified visually~~ — verified at 360px on all
+      five pages with headless Chrome; one real overflow bug found and fixed
+- [x] ~~Temperature scaling~~ — implemented; it does **not** close the Brier
+      gap, see §9
+- [ ] **Nothing is deployed anywhere.** Local Flask only.
 - [ ] Pre-existing deferrals, unchanged and out of scope: external validation
       (D-4), localisation mIoU (D-2), subgroup analysis (A-2), study mode
-      (D-6/P-1), concept bottleneck (M-3/D-5)
-- [ ] Temperature scaling on the calibration split — M-1b's Brier score
-      regressed (0.047 → 0.063). Cheap fix, not attempted; see §9.
+      (D-6/P-1), concept bottleneck (M-3/D-5). These need data-use agreements,
+      ethics approval or recruited clinicians — they are not coding tasks.
+- [ ] `evaluate.py` has not been rerun end-to-end since the BatchNorm fix. The
+      sanity-check block was refreshed surgically instead
+      (`scripts/refresh_sanity_checks.py`), and `sanity_checks.recomputed_at`
+      records that. A full rerun would make the file single-provenance again.
 
 ---
 
@@ -317,6 +317,12 @@ Two separate problems, both now fixed:
 Two regression tests were added in `tests/test_metrics_schema.py`
 (`test_metrics_json_is_strict_json`, `test_rank_similarity_is_none_for_a_constant_heatmap`).
 
+> **Superseded by §10.** The paragraph below concluded that the degenerate
+> stages were inherent to the test. They were not — they were a bug in
+> `_randomize_layer`, which zeroed BatchNorm's gamma. Fixing it made all 10
+> stages defined and produced a result that matters (IG fails E-8). Read
+> §10 instead; this is kept only so the reasoning trail is visible.
+
 **What this costs the E-8 claim:** cascading randomization is only informative
 for the first three stages. Both methods *do* fall away from the original
 there (Grad-CAM 1.000 -> 0.477 -> -0.335, IG 1.000 -> 0.773 -> 0.751), and
@@ -339,3 +345,80 @@ curl / /dataset /audit /study       -> 200
 POST /api/predict  test NORMAL      -> NORMAL, p=0.046
 POST /api/predict  test PNEUMONIA   -> PNEUMONIA, p=0.972
 ```
+
+---
+
+## 10. Second pass, 2026-09-21 afternoon
+
+Three things closed, and two of them changed what the project can claim.
+
+### Integrated Gradients fails the E-8 sanity check
+
+The cascading randomization test was reporting `undefined` for 7 of its 10
+stages. That turned out to be a **bug in the test**, not a property of it:
+`_randomize_layer` zeroed every 1-D weight, and BatchNorm's gamma is 1-D, so
+it set gamma = 0 and the layer emitted a constant. Every heatmap from that
+point down was flat.
+
+With BatchNorm handled properly (gamma/beta permuted across channels, moving
+statistics left alone) all 10 stages are defined, and the result matters:
+
+| | Grad-CAM | Integrated Gradients |
+|---|---|---|
+| logits | +0.477 | +0.773 |
+| dense | **-0.335** | +0.751 |
+| fully randomized | +0.230 | **+0.629** |
+| label randomization | +0.266 | +0.683 |
+
+**Grad-CAM passes. IG largely fails.** With every layer randomized, IG's
+attribution still correlates +0.63 with the trained model's. An explanation
+that survives the destruction of the model it explains is substantially
+describing the *input*, which is the known failure mode for
+gradient-and-input methods (Adebayo et al. 2018). IG also has the worst
+deletion AUC in the benchmark (0.908 vs Grad-CAM's 0.610) — two independent
+diagnostics agreeing.
+
+**Do not present IG as a trustworthy explanation for this model.** Grad-CAM
+is the cheapest method *and* the one that passes both checks.
+
+### Temperature scaling does not fix the Brier gap
+
+Fitted T = **0.718** on the calibration split. It *sharpens*, meaning the
+model is under-confident — the signature of label smoothing, not the
+over-confidence usually assumed.
+
+| metric (test) | before | after |
+|---|---|---|
+| Brier | 0.0630 | 0.0624 (-1.0%) |
+| ECE | 0.1249 | 0.1065 (-14.8%) |
+
+ECE improves usefully; Brier barely moves. The residual is *refinement*, not
+calibration: the 26 missed pneumonias are confidently wrong, and no monotonic
+rescaling rescues a case on the wrong side of the boundary. So the Brier gap
+against the baseline is **not** a calibration-scale artefact. The headline
+`brier_score` and `decision_threshold` are deliberately left on the raw
+probability scale; the temperature is recorded beside them.
+
+### Mobile layout verified
+
+All five pages at a true 360px. One real bug: the dashboard's absolute
+`model_path` overflowed horizontally (a Windows path breaks only at
+backslashes). Fixed with `overflow-wrap:anywhere` scoped to `.meta code`.
+
+**If you need to redo this:** `chrome --headless --window-size=360,...` does
+**not** give a 360px viewport — Chrome clamps the window near 500px and then
+crops the screenshot, which looks precisely like an overflow bug and wasted a
+cycle here. Render the app inside a 360px-wide `<iframe>` on a wider page
+instead; the inner document then gets a genuine 360px viewport.
+
+### New in this pass
+
+```
+src/xai_cxr/evaluation/calibration.py   temperature scaling + ECE
+scripts/calibrate.py                    fit on calibration, report on test
+scripts/operating_point.py              threshold sweep on cached scores
+scripts/refresh_sanity_checks.py        recompute only the E-8 block
+tests/test_calibration.py               10 tests
+```
+
+Test count went 47 -> 59.

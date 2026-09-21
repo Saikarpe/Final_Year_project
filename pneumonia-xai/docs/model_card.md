@@ -151,6 +151,41 @@ readable form (A-2).
   explanation method's output actually depends on the trained weights, or
   would look similar from an untrained/randomly-relabelled network.
 
+### Which explanation method to trust
+
+The seven methods are **not** interchangeable, and the benchmark in
+`models/metrics.json` disagrees with the intuition that a more expensive
+method is a better one.
+
+- **Grad-CAM passes both sanity checks (E-8) and has the best deletion AUC.**
+  It is also the cheapest of the post-hoc methods (~0.7 s). It is the default
+  for good reasons, not historical ones.
+- **Integrated Gradients fails the cascading-randomization check.** With every
+  layer of the network randomized, its attribution map still correlates +0.63
+  with the map from the trained model (Grad-CAM: +0.23, falling to -0.34
+  mid-cascade). An explanation that survives randomizing the model it explains
+  is substantially describing the input -- the known failure mode for
+  gradient-and-input methods (Adebayo et al. 2018). IG also has the worst
+  deletion AUC in the suite. Do not present it as evidence that the model
+  looked at the right region.
+
+See `docs/decisions_log.md`, "The cascading randomization test was broken by
+its own BatchNorm handling", for the full table and for why earlier runs
+reported these stages as undefined.
+
+### Calibration
+
+`classification.calibration.temperature_scaling` records a temperature fitted
+on the calibration split (T = 0.718 for the current checkpoint -- it sharpens,
+because label smoothing leaves the model under-confident). It cuts expected
+calibration error by ~15% but barely moves the Brier score, because the
+residual is refinement rather than calibration: confidently-wrong cases cannot
+be rescued by a monotonic rescaling.
+
+The reported `brier_score` and `decision_threshold` are on the **raw**
+probability scale. If you apply the temperature, you must map the threshold
+through it as well.
+
 ## Caveats and recommendations
 
 - No external validation exists yet (E-4/D-4 deferred) -- every number above

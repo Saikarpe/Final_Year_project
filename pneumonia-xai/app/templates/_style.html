@@ -44,6 +44,13 @@
   a{color:var(--accent);text-decoration:none}
   a:hover{text-decoration:underline}
   code,.mono{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;font-size:.92em}
+  /* Scoped to the dashboard's "Evaluated model" line, which prints an absolute
+     model_path. A Windows path breaks only at its backslashes and one segment is
+     wider than a 360px viewport, so it overflows horizontally on a phone without
+     this. Deliberately NOT applied to <code> globally: the audit log's timestamps
+     are monospace too, and breaking those anywhere shatters them down the column
+     one character at a time instead of wrapping at the hyphen. */
+  .meta code{overflow-wrap:anywhere}
 
   /* Every interactive element gets a visible keyboard ring. The previous
      stylesheet had none, so tabbing through the page was invisible. */

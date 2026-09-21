@@ -26,6 +26,9 @@ from xai_cxr.evaluation.faithfulness import deletion_insertion_auc, road_score
 from xai_cxr.evaluation.robustness import robustness_and_complexity
 from xai_cxr.evaluation.sanity_checks import cascading_randomization_test, label_randomization_test
 from xai_cxr.evaluation.runtime import time_methods
+from xai_cxr.evaluation.calibration import (
+    apply_temperature, expected_calibration_error, fit_temperature,
+)
 from xai_cxr.uncertainty.conformal import calibrate, empirical_coverage
 from xai_cxr.uncertainty.abstention import abstention_curve
 from xai_cxr import tracking
@@ -117,6 +120,32 @@ def main():
     qhats = calibrate(calib_labels, calib_scores)
     coverage = {str(a): empirical_coverage(test_labels, test_scores, q) for a, q in qhats.items()}
     abst_curve = abstention_curve(test_labels, test_scores, qhats)
+    # Temperature scaling (E-5). Fitted here rather than in a separate pass
+    # because the calibration split has just been scored -- refitting it would
+    # mean a second inference run over 563 images for one scalar. Fitted on
+    # calibration, reported on test, and deliberately NOT folded back into
+    # `classification.calibration.brier_score` or the decision threshold:
+    # those are defined on the raw probabilities and restating them on a
+    # different scale would make runs incomparable.
+    temperature = fit_temperature(calib_labels, calib_scores)
+    tempered_test = apply_temperature(test_scores, temperature)
+    classification['calibration']['temperature_scaling'] = {
+        'temperature': temperature,
+        'fitted_on': 'calibration',
+        'n_calibration': int(len(calib_labels)),
+        'brier_before': classification['calibration']['brier_score'],
+        'brier_after': calibration_and_brier(test_labels, tempered_test)['brier_score'],
+        'ece_before': expected_calibration_error(test_labels, test_scores),
+        'ece_after': expected_calibration_error(test_labels, tempered_test),
+        'note': ('Strictly monotonic, so AUROC and every ranking metric are '
+                 'unchanged. brier_score and decision_threshold above are on the '
+                 'RAW probability scale.'),
+    }
+    print(f'  temperature {temperature:.4f} '
+          f'(ECE {classification["calibration"]["temperature_scaling"]["ece_before"]:.4f}'
+          f' -> {classification["calibration"]["temperature_scaling"]["ece_after"]:.4f})',
+          flush=True)
+
     uncertainty = {
         'qhats': {str(a): q for a, q in qhats.items()},
         'empirical_coverage': coverage,

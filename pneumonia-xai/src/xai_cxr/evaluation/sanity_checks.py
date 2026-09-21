@@ -72,13 +72,45 @@ def _rank_similarity(a: np.ndarray, b: np.ndarray) -> float | None:
 
 
 def _randomize_layer(layer: tf.keras.layers.Layer, seed: int) -> None:
+    """Randomize a layer's learned weights in place.
+
+    Kernels are redrawn from N(0, 0.05) and biases zeroed, which is an ordinary
+    re-initialisation.
+
+    BatchNormalization needs separate handling, and getting it wrong silently
+    destroys the whole test. Its four weights (gamma, beta, moving_mean,
+    moving_variance) are all 1-D, so the "1-D means bias, so zero it" rule
+    above sets gamma = 0 -- and a BN layer with gamma = 0 outputs beta for
+    every channel, i.e. a constant. Every heatmap from that point down the
+    cascade is then flat, every rank correlation against it is undefined, and
+    the test reports nothing for the majority of its stages.
+
+    Instead: permute the fitted gamma and beta across channels, and leave the
+    moving statistics untouched. Permutation destroys the learned
+    per-channel correspondence (which is what the test is probing) while
+    preserving the distribution of scales exactly, so activations stay in a
+    regime where the explanation is still defined. The moving statistics are
+    dataset statistics rather than learned parameters, so Adebayo et al.'s
+    "randomize the learned weights" is not a licence to touch them.
+    """
     weights = layer.get_weights()
     if not weights:
         return
     rng = np.random.RandomState(seed)
-    new_weights = [rng.normal(scale=0.05, size=w.shape).astype(w.dtype) if w.ndim > 1
-                    else np.zeros_like(w) for w in weights]
-    layer.set_weights(new_weights)
+
+    if isinstance(layer, tf.keras.layers.BatchNormalization):
+        new_weights = list(weights)
+        # Trainable params first (gamma, beta), in Keras' fixed order; a BN
+        # with scale=False or center=False simply has fewer of them.
+        for i in range(min(2, len(weights))):
+            new_weights[i] = rng.permutation(weights[i]).astype(weights[i].dtype)
+        layer.set_weights(new_weights)
+        return
+
+    layer.set_weights([
+        rng.normal(scale=0.05, size=w.shape).astype(w.dtype) if w.ndim > 1
+        else np.zeros_like(w) for w in weights
+    ])
 
 
 def _clone_with_weights(model: tf.keras.Model) -> tf.keras.Model:
