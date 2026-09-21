@@ -38,9 +38,11 @@ original publication). This repo did not re-verify any label.
 
 ## Preprocessing in this repo
 
-Images are read at their native resolution and resized to 224x224 by
+Images are read at their native resolution and resized to `img_size`
+(currently 320x320; see configs/data.yaml) by
 `xai_cxr.data.load_image` / `load_split_dataset`. Model-specific
-normalization (`vgg16.preprocess_input`, not a manual `/255` rescale -- see
+normalization (the backbone family's own `preprocess_input`, not a manual
+`/255` rescale -- see
 `xai_cxr.models.baseline`) is applied inside the model graph, not at load
 time, so every consumer (training, evaluation, explanation methods, the app)
 reads the same raw-pixel representation.

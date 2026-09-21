@@ -1,27 +1,74 @@
-# Model card (P-7) -- PneumoScan AI baseline (M-1)
+# Model card (P-7) -- PneumoScan AI baseline (M-1 / M-1b)
 
 Follows the spirit of Mitchell et al.'s "Model Cards for Model Reporting".
-Covers the M-1 VGG16 baseline only -- M-2/M-3/M-4 (multi-label, concept
+Covers the M-1 classifier only -- M-2/M-3/M-4 (multi-label, concept
 bottleneck, patch self-explainable) are all deferred pending D-3/D-5 (see
 docs/decisions_log.md).
 
 ## Model details
 
-- **Architecture:** VGG16 (ImageNet weights, frozen) -> GlobalAveragePooling2D
-  -> Dense(256, ReLU) -> Dropout(0.5) -> Dense(1, logit) -> Sigmoid.
-  Implemented in `xai_cxr.models.baseline.build_model`.
-- **Input:** 224x224x3 RGB, `vgg16.preprocess_input` applied inside the model
-  graph (a `Lambda` layer, so every caller passes raw [0, 255] pixels).
+- **Architecture (M-1b, current):** a *configurable* backbone selected by
+  `backbone:` in `configs/model.yaml`, defaulting to **DenseNet121**
+  (ImageNet weights), then:
+
+      LearnableWindow -> <family>.preprocess_input -> backbone
+        -> SpatialDropout2D(0.1) -> AttentionPool2D(128) -> BatchNorm
+        -> Dropout(0.2) -> Dense(256, GELU) -> Dropout(0.4)
+        -> Dense(1, logit) -> Sigmoid
+
+  Implemented in `xai_cxr.models.baseline.build_model` and
+  `xai_cxr.models.heads`. The backbone registry
+  (`xai_cxr.models.backbones.BACKBONES`) also carries `efficientnetv2s`,
+  `efficientnetv2b0`, `convnext_tiny`, `resnet50v2` and `vgg16`.
+- **Architecture (M-1, superseded):** VGG16 (ImageNet, frozen forever) ->
+  GlobalAveragePooling2D -> Dense(256, ReLU) -> Dropout(0.5) -> Dense(1,
+  logit) -> Sigmoid. Reproduce it exactly with `backbone: vgg16`,
+  `cam_layer: block5_conv3`, `head: gap`, `window_layer: false`,
+  `spatial_dropout: 0`, `head_batchnorm: false`, `finetune_epochs: 0`. That
+  is the configuration any before/after comparison should use.
+- **Head, initialisation:** `AttentionPool2D` zero-initialises its attention
+  logits and `LearnableWindow.strength` starts at 0, so at step 0 the M-1b
+  head is bit-for-bit the M-1 head (global average pooling, raw pixels). The
+  additions have to earn their keep during training; they cannot silently
+  change what the baseline was. Asserted in `tests/test_gradcam.py`.
+- **Input:** 320x320x3 RGB (`img_size` in `configs/data.yaml`). The backbone
+  family's own `preprocess_input` is applied *inside the model graph*, by a
+  registered serializable `Preprocess` layer, so every caller passes raw
+  [0, 255] pixels and a saved checkpoint reconstructs its own correct
+  preprocessing on load.
+- **Explanation target:** `cam_layer: auto` resolves to the final feature map.
+  Every modern backbone ends at stride 32, so the CAM grid is `img_size/32`:
+  **10x10** at the 320x320 used here (7x7 if run at 224). VGG16's 14x14 came
+  from `block5_conv3` sitting before the last pool at 224x224. `cam_layer:
+  hires` selects the stride-16 stage to double the grid again, at the cost of
+  shallower features. The case reader displays the live grid size, because a
+  bilinearly upsampled map looks far more precise than the evidence behind it.
+- **Training:** two stages. Stage 1 warms the head with the backbone frozen
+  (AdamW, warmup-cosine from 5e-4); stage 2 unfreezes the top 60% of backbone
+  layers at 5e-6 with BatchNormalization kept frozen. The M-1 model had no
+  stage 2 at all, so no part of its feature extractor ever saw a radiograph.
+  Batch size is 8 and the learning rates are scaled by sqrt(8/32) from the
+  batch-32 values -- both are 4 GB VRAM constraints on the training machine,
+  not modelling choices; see docs/decisions_log.md before reusing them.
+- **Loss:** class-weighted binary cross-entropy with label smoothing 0.05
+  (optionally focal, `focal_gamma > 0`) for the ~3:1 imbalance.
+- **Augmentation:** rotation, zoom, translation, contrast and brightness.
+  Horizontal flip is **off by default** -- mirroring a chest radiograph moves
+  the heart to the right hemithorax and flips the laterality marker, which is
+  the exact shortcut the A-1 audit measures.
 - **Output:** P(PNEUMONIA), thresholded at a value tuned on the validation
-  split via Youden's J (see `models/metrics.json`'s
-  `classification.decision_threshold`), not a fixed 0.5.
+  split (see `models/metrics.json`'s `classification.decision_threshold`), not
+  a fixed 0.5. `threshold_policy` selects Youden's J (equal cost either way)
+  or the lowest-FPR threshold meeting `min_sensitivity`.
 - **Training data:** Kermany paediatric chest X-ray corpus (D-1), re-split
   patient-grouped into train/val/calibration/test (see
-  `docs/dataset_datasheet.md`). Class-weighted loss for the ~3:1 imbalance.
+  `docs/dataset_datasheet.md`).
 - **Versioning:** the v1 model (manual `/255` rescale, `Flatten`, no class
   weighting, val monitored on 16 images) is kept at
   `models/pneumonia_model_v1_legacy.h5` as the "here's what was wrong with
-  it" artifact, not deleted.
+  it" artifact, not deleted. Checkpoints trained before M-1b are not loadable
+  by the current graph and must be retrained; the app says so explicitly
+  rather than failing obscurely.
 
 ## Intended use
 
@@ -55,6 +102,33 @@ worse than one that points at the live source. Re-run
 `python scripts/evaluate.py` after any retrain; `metrics.json`'s
 `generated_at` and `model_hash` fields let you confirm which run a number
 came from.
+
+### Decision threshold and operating point
+
+The reported threshold (`classification.decision_threshold`) is **Youden's J,
+tuned on the validation split** before the test split was touched. J weights a
+missed pneumonia exactly as heavily as a false alarm, which is *not* the
+clinical trade-off for a triage tool -- and on this model it costs real
+sensitivity.
+
+`python scripts/operating_point.py` sweeps the threshold on cached test scores
+and shows the size of the effect: at the reported J threshold the model misses
+26 of 431 pneumonias, but the same unchanged model re-tuned to hold
+specificity at 90% misses 4. The full analysis, including the like-for-like
+comparison against the M-1 baseline, is in `docs/decisions_log.md`
+("the sensitivity gap is a threshold artefact", 2026-09-21).
+
+Two consequences for anyone reading a sensitivity number off this model:
+
+- **Do not compare sensitivities across models at their own Youden points.**
+  Compare AUROC, or compare at a matched operating point. Against the M-1
+  VGG16 baseline the two models are indistinguishable once matched, despite a
+  seven-case difference in raw false negatives.
+- **Any deployment must re-tune the threshold** on a calibration split against
+  an explicit cost ratio. `tune_threshold_at_sensitivity` in
+  `src/xai_cxr/models/` implements the screening policy;
+  `configs/model.yaml` selects which policy `scripts/train.py` saves, and the
+  choice is recorded per run in `runs/results_table.csv`.
 
 ## Performance by subgroup
 
