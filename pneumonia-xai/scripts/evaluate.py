@@ -24,7 +24,9 @@ from xai_cxr.explain.registry import METHODS, available_methods, explain as regi
 from xai_cxr.evaluation.metrics import bootstrap_auroc_ci, sensitivity_specificity, calibration_and_brier
 from xai_cxr.evaluation.faithfulness import deletion_insertion_auc, road_score
 from xai_cxr.evaluation.robustness import robustness_and_complexity
-from xai_cxr.evaluation.sanity_checks import cascading_randomization_test, label_randomization_test
+from xai_cxr.evaluation.sanity_checks import (
+    LABEL_RAND_SEEDS, cascading_randomization_test, label_randomization_repeated,
+)
 from xai_cxr.evaluation.runtime import time_methods
 from xai_cxr.evaluation.calibration import (
     apply_temperature, expected_calibration_error, fit_temperature,
@@ -218,10 +220,20 @@ def main():
         cascade = cascading_randomization_test(xai_model, sanity_image, method, img_size=data_cfg.img_size)
         print(f'  {method}: cascading randomization done ({time.time() - t0:.0f}s)', flush=True)
         t0 = time.time()
-        label_rand = label_randomization_test(xai_model, sanity_image, method, label_rand_images,
-                                                img_size=data_cfg.img_size, epochs=LABEL_RAND_EPOCHS)
+        # Repeated across seeds: one run of this check has an sd of ~0.5 for
+        # Grad-CAM, so a single draw is not a reportable number. See
+        # xai_cxr.evaluation.sanity_checks.label_randomization_repeated.
+        label_rand = label_randomization_repeated(xai_model, sanity_image, method,
+                                                  label_rand_images,
+                                                  img_size=data_cfg.img_size,
+                                                  epochs=LABEL_RAND_EPOCHS)
         sanity['methods'][method] = {'cascading_randomization': cascade, 'label_randomization': label_rand}
-        print(f'  {method}: label randomization done ({time.time() - t0:.0f}s)', flush=True)
+        spread = ''
+        if label_rand['sd'] is not None:
+            spread = (f' mean={label_rand["mean"]:+.3f} sd={label_rand["sd"]:.3f} '
+                      f'[{label_rand["min"]:+.3f}, {label_rand["max"]:+.3f}]')
+        print(f'  {method}: label randomization done over {len(LABEL_RAND_SEEDS)} seeds '
+              f'({time.time() - t0:.0f}s){spread}', flush=True)
 
     print('\n=== Runtime per explanation (E-11) ===', flush=True)
     timing_image, _ = _sample_rows(data_cfg, 1, seed=3)[0]
@@ -242,13 +254,27 @@ def main():
             'status': 'not_available',
             'reason': 'Needs D-2 (VinDr-CXR boxes) -- deferred, see docs/decisions_log.md',
         },
+        # This script rewrites metrics.json wholesale; scripts/audit.py only
+        # appends its "audits" key. So running audit first and evaluate second
+        # silently drops the audit -- an ordering constraint that used to live
+        # only in HANDOFF.md prose. Writing the placeholder puts it in the
+        # artifact itself, in the same not_available/reason idiom the
+        # genuinely-deferred sections use, so the dashboard says "re-run
+        # audit.py" instead of rendering nothing and looking complete.
+        'audits': {
+            'status': 'not_available',
+            'reason': ('scripts/evaluate.py rewrote metrics.json after the last audit; '
+                       're-run scripts/audit.py to recompute it against this model.'),
+        },
         # Rendered straight onto the dashboard, so it is prose, not a repr:
         # "['gradcam', 'gradcam++']" is not something to show a reader.
         'scope_note': (
             f'Faithfulness/ROAD computed on {FAST_SAMPLE_N} test images for '
             f'{_join(fast_methods)} and {SLOW_SAMPLE_N} for {_join(slow_methods)} '
             f'(cost-scoped, see scripts/evaluate.py). Robustness/complexity computed only for '
-            f'{_join(fast_methods)}. Sanity checks (cascading + label randomization) computed '
+            f'{_join(fast_methods)}. Sanity checks (cascading + label randomization, the '
+            f'latter repeated over {len(LABEL_RAND_SEEDS)} seeds because one run of it has an '
+            f'sd of ~0.5) computed '
             f'only for {_join([m for m in SANITY_CHECK_METHODS if m in supported])}.'
         ),
     }

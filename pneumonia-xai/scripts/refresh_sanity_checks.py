@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 from xai_cxr.config import DataConfig, ModelConfig, metrics_path  # noqa: E402
 from xai_cxr.data import load_image  # noqa: E402
 from xai_cxr.evaluation.sanity_checks import (  # noqa: E402
-    cascading_randomization_test, label_randomization_test,
+    LABEL_RAND_SEEDS, cascading_randomization_test, label_randomization_repeated,
 )
 from xai_cxr.models.baseline import XAIModel, load_trained  # noqa: E402
 
@@ -69,10 +69,15 @@ def main():
             images = np.array([load_image(os.path.join(data_cfg.dataset_dir, rows[i][0]),
                                           data_cfg.img_size) for i in idx])
             t0 = time.time()
-            block['label_randomization'] = label_randomization_test(
+            block['label_randomization'] = label_randomization_repeated(
                 xai, img, method, images, img_size=data_cfg.img_size,
                 epochs=block['label_randomization']['epochs'])
-            print(f'  {method}: label randomization done ({time.time() - t0:.0f}s)')
+            lr = block['label_randomization']
+            spread = ('' if lr['sd'] is None else
+                      f' mean={lr["mean"]:+.3f} sd={lr["sd"]:.3f}'
+                      f' [{lr["min"]:+.3f}, {lr["max"]:+.3f}]')
+            print(f'  {method}: label randomization done over '
+                  f'{len(LABEL_RAND_SEEDS)} seeds ({time.time() - t0:.0f}s){spread}')
 
     sanity['recomputed_at'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
     sanity['recomputed_note'] = (

@@ -145,9 +145,21 @@
             <td>{% if sim is none %}<span class="na" title="The randomized model emits a constant heatmap, so a rank correlation against it has no defined value.">undefined (degenerate map)</span>{% else %}<span class="bar"><i style="width:{{ ((sim|abs) * 70)|round(0) }}px"></i><span>{{ '%.3f'|format(sim) }}</span></span>{% endif %}</td></tr>
           {% endfor %}
           <tr><td>{{ method_info[method].label if method in method_info else method }}</td>
-            <td>label randomization ({{ data.label_randomization.epochs }} epoch proxy)</td>
-            {% set lsim = data.label_randomization.similarity_to_original %}
-            <td>{% if lsim is none %}<span class="na">undefined (degenerate map)</span>{% else %}{{ '%.3f'|format(lsim) }}{% endif %}</td></tr>
+            {% set lr = data.label_randomization %}
+            <td>label randomization ({{ lr.epochs }} epoch proxy{% if lr.seeds %},
+              {{ lr.seeds|length }} seeds{% endif %})</td>
+            {# One run of this check has an sd of ~0.5 for Grad-CAM, so the
+               single value is shown only when a repeated run is unavailable
+               (an older metrics.json). Where the spread exists it IS the
+               result -- see docs/decisions_log.md. #}
+            {% if lr.sd is defined and lr.sd is not none %}
+            <td><span title="Range over {{ lr.seeds|length }} seeds: a large spread means the explanation tracks the model, which is what this check rewards.">{{ '%.3f'|format(lr.mean) }} &plusmn; {{ '%.3f'|format(lr.sd) }}
+              <small class="na">[{{ '%.3f'|format(lr.min) }}, {{ '%.3f'|format(lr.max) }}]</small></span></td></tr>
+            {% else %}
+            {% set lsim = lr.similarity_to_original %}
+            <td>{% if lsim is none %}<span class="na">undefined (degenerate map)</span>{% else %}{{ '%.3f'|format(lsim) }}
+              <small class="na">(single run; sd not measured)</small>{% endif %}</td></tr>
+            {% endif %}
         {% endfor %}
       </tbody>
     </table>
@@ -175,7 +187,7 @@
   </div>
 
   <h3 class="sec-title sect">Shortcut audit (A-1)</h3>
-  {% if metrics.audits %}
+  {% if metrics.audits and metrics.audits.shortcut_audit_summary %}
   <p class="sec-sub">Mean effect over {{ metrics.audits.shortcut_audit_summary.n_samples }} test images.
     Lung-field ratio uses an approximate geometric mask (no VinDr segmentation available).</p>
   <div class="card tbl">
@@ -197,7 +209,8 @@
   <p class="sec-sub">Subgroup performance (A-2): <span class="pill na">Not available</span> &mdash;
     {{ metrics.audits.subgroup_performance.reason }}</p>
   {% else %}
-  <p class="note na">Not yet run. Run <code>python scripts/audit.py</code> to populate this section.</p>
+  <p class="note na">{{ metrics.audits.reason if metrics.audits and metrics.audits.reason
+    else 'Not yet run.' }} Run <code>python scripts/audit.py</code> to populate this section.</p>
   {% endif %}
   {% endif %}
 </main>

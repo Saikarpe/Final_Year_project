@@ -176,6 +176,22 @@ def label_randomization_test(xai_model: XAIModel, image: np.ndarray, method: str
     """Fast proxy for the full label-randomization sanity check: refit only
     the (already-frozen-backbone) head on shuffled labels for a couple of
     epochs over a small subset, then compare heatmaps. See module docstring."""
+    # Every *explicit* source of randomness below is seeded -- the shuffled
+    # labels and the head re-initialisation both draw from RandomState(seed).
+    # The head's dropout layers are not: Dropout/SpatialDropout2D draw their
+    # masks from TensorFlow's global RNG during the fit() call, and nothing
+    # seeded that. Two runs of this "deterministic, seeded" test therefore
+    # reported Grad-CAM similarities of 0.266 and 0.090 -- a swing larger than
+    # the gap the test is used to argue about. Seeding the global RNG here
+    # makes the reported number reproducible.
+    #
+    # This does mutate global TF state. That is deliberate and safe for the
+    # callers: evaluate.py runs the sanity checks near the end of the suite,
+    # and the only work after them (E-11 runtime timing) does not depend on
+    # the RNG stream. GPU convolution backprop remains nondeterministic at the
+    # last couple of decimal places; this removes the dominant term, not all
+    # of it.
+    tf.random.set_seed(seed)
     rng = np.random.RandomState(seed)
     shuffled_labels = rng.randint(0, 2, size=len(train_images)).astype('float32')
 
@@ -209,3 +225,62 @@ def label_randomization_test(xai_model: XAIModel, image: np.ndarray, method: str
         'epochs': epochs,
         'note': 'proxy: head refit on shuffled labels, backbone frozen and unchanged',
     }
+
+
+#: Seeds used by label_randomization_repeated. Five is enough to tell an
+#: sd of 0.55 from an sd of 0.01, which is the distinction that matters here,
+#: and costs ~40 s per method per seed.
+LABEL_RAND_SEEDS = (0, 1, 2, 3, 4)
+
+
+def label_randomization_repeated(xai_model: XAIModel, image: np.ndarray, method: str,
+                                  train_images: np.ndarray,
+                                  img_size: tuple[int, int] = (224, 224),
+                                  epochs: int = 2, seeds=LABEL_RAND_SEEDS,
+                                  batch_size: int | None = None) -> dict:
+    """Run the label-randomization proxy across seeds and report the spread.
+
+    A single run of this check is not a usable statistic. Measured over five
+    seeds on the trained model, Grad-CAM's similarity ranges from -0.44 to
+    +0.81 (sd 0.55) while Integrated Gradients sits between +0.70 and +0.72
+    (sd 0.009). Any one draw of the Grad-CAM number is therefore almost
+    uninformative -- and three successive runs of the suite did in fact report
+    0.266, 0.090 and 0.734, which invites three different conclusions.
+
+    The spread is not noise to be averaged away; it *is* the finding. Adebayo
+    et al.'s test asks whether an explanation changes when the model stops
+    being the model that was trained. Grad-CAM's answer changes completely
+    from seed to seed, which is what a model-dependent explanation should do.
+    IG returns the same map whatever the refit did to the head, which is the
+    failure mode the test exists to detect. So both `mean` and `sd` are
+    reported, and the write-up should quote both.
+
+    `similarity_to_original` is kept as the first seed's value so existing
+    readers of metrics.json (and the dashboard) keep working; it should be
+    read as one sample, not as the result.
+    """
+    runs = [
+        label_randomization_test(xai_model, image, method, train_images,
+                                 img_size=img_size, epochs=epochs, seed=s,
+                                 batch_size=batch_size)
+        for s in seeds
+    ]
+    sims = [r['similarity_to_original'] for r in runs]
+    defined = [s for s in sims if s is not None]
+
+    first = runs[0]
+    summary = dict(first)
+    summary.update({
+        'seeds': list(seeds),
+        'similarities': sims,
+        'n_defined': len(defined),
+        'mean': float(np.mean(defined)) if defined else None,
+        # ddof=1: this is a sample of seeds, not the population of them.
+        'sd': float(np.std(defined, ddof=1)) if len(defined) > 1 else None,
+        'min': float(np.min(defined)) if defined else None,
+        'max': float(np.max(defined)) if defined else None,
+        'note': ('proxy: head refit on shuffled labels, backbone frozen and unchanged; '
+                 'repeated across seeds because a single run of this check has an sd '
+                 'of ~0.5 for Grad-CAM. Quote mean and sd, not similarity_to_original.'),
+    })
+    return summary
