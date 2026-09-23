@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-21T04:55:18Z",
+  "generated_at": "2026-09-23T18:36:49Z",
   "model_path": "C:\\Users\\karpe\\OneDrive\\Desktop\\AIML Project\\Hackerearth\\Claude\\Final_Year_project\\pneumonia-xai\\models\\pneumonia_model.h5",
   "model_hash": "2a279eeff356",
   "classification": {
@@ -44,7 +44,7 @@
         {
           "bin_lower": 0.30000000000000004,
           "bin_upper": 0.4,
-          "mean_predicted": 0.36146163692077,
+          "mean_predicted": 0.36146166920661926,
           "observed_frequency": 0.9166666666666666,
           "n": 12
         },
@@ -72,7 +72,7 @@
         {
           "bin_lower": 0.7000000000000001,
           "bin_upper": 0.8,
-          "mean_predicted": 0.7541498204072317,
+          "mean_predicted": 0.7541498243808746,
           "observed_frequency": 1.0,
           "n": 30
         },
@@ -86,21 +86,21 @@
         {
           "bin_lower": 0.9,
           "bin_upper": 1.0,
-          "mean_predicted": 0.9537592381238937,
+          "mean_predicted": 0.9537592376187697,
           "observed_frequency": 1.0,
           "n": 236
         }
       ],
-      "brier_score": 0.06299667491429943,
+      "brier_score": 0.06299667388846661,
       "temperature_scaling": {
         "temperature": 0.7178729718634773,
         "fitted_on": "calibration",
         "n_calibration": 563,
-        "brier_before": 0.06299659885897839,
-        "brier_after": 0.062356384079475656,
-        "ece_before": 0.12493057459988074,
-        "ece_after": 0.10648940240017253,
-        "note": "Fitted on the calibration split, evaluated on test. Strictly monotonic, so AUROC and every ranking metric are unchanged. The reported brier_score and decision_threshold above are on the RAW probability scale and are deliberately left as they were."
+        "brier_before": 0.06299667388846661,
+        "brier_after": 0.06235647720108586,
+        "ece_before": 0.12493065883296689,
+        "ece_after": 0.10648950733478572,
+        "note": "Strictly monotonic, so AUROC and every ranking metric are unchanged. brier_score and decision_threshold above are on the RAW probability scale."
       }
     },
     "decision_threshold": 0.3447483777999878,
@@ -176,12 +176,12 @@
     },
     "integrated_gradients": {
       "n_samples": 12,
-      "deletion_auc_mean": 0.9075829233974219,
-      "insertion_auc_mean": 0.8725293651223183,
-      "road_mean_drop": -0.13833607115472357,
+      "deletion_auc_mean": 0.907581834619244,
+      "insertion_auc_mean": 0.8725294716656208,
+      "road_mean_drop": -0.13834526715800166,
       "road_approximate": true,
-      "max_sensitivity_mean": 0.9043239339227805,
-      "complexity_mean": 10.782944362079846
+      "max_sensitivity_mean": 0.9043238807407064,
+      "complexity_mean": 10.782944362939404
     },
     "scorecam": {
       "n_samples": 4,
@@ -203,9 +203,9 @@
     },
     "shap": {
       "n_samples": 4,
-      "deletion_auc_mean": 0.9279981311410666,
-      "insertion_auc_mean": 0.8877311192452908,
-      "road_mean_drop": -0.22011667443439364,
+      "deletion_auc_mean": 0.9284354697912931,
+      "insertion_auc_mean": 0.890534696355462,
+      "road_mean_drop": -0.21936565460637214,
       "road_approximate": true,
       "max_sensitivity_mean": null,
       "complexity_mean": null
@@ -224,48 +224,67 @@
             },
             {
               "stage": "logits",
-              "similarity_to_original": 0.47702242748255974
+              "similarity_to_original": 0.4770218161457078
             },
             {
               "stage": "dense",
-              "similarity_to_original": -0.3351615539682442
+              "similarity_to_original": -0.3351616261224593
             },
             {
               "stage": "head_bn",
-              "similarity_to_original": -0.3315198156980197
+              "similarity_to_original": -0.33151980248043517
             },
             {
               "stage": "pool",
-              "similarity_to_original": -0.38177890229001066
+              "similarity_to_original": -0.3817792738158605
             },
             {
               "stage": "backbone_group_1/5",
-              "similarity_to_original": 0.20837441568802748
+              "similarity_to_original": 0.20837446281135666
             },
             {
               "stage": "backbone_group_2/5",
-              "similarity_to_original": 0.2352832637770052
+              "similarity_to_original": 0.23528349783573713
             },
             {
               "stage": "backbone_group_3/5",
-              "similarity_to_original": 0.23961092496954167
+              "similarity_to_original": 0.23961118303840592
             },
             {
               "stage": "backbone_group_4/5",
-              "similarity_to_original": 0.26443941633951146
+              "similarity_to_original": 0.26443978228792886
             },
             {
               "stage": "backbone_group_5/5",
-              "similarity_to_original": 0.2302587366490575
+              "similarity_to_original": 0.2302593688049206
             }
           ]
         },
         "label_randomization": {
           "method": "gradcam",
-          "similarity_to_original": 0.26628163355383416,
+          "similarity_to_original": 0.7327715862137798,
           "n_train_images": 60,
           "epochs": 1,
-          "note": "proxy: head refit on shuffled labels, backbone frozen and unchanged"
+          "note": "proxy: head refit on shuffled labels, backbone frozen and unchanged; repeated across seeds because a single run of this check has an sd of ~0.5 for Grad-CAM. Quote mean and sd, not similarity_to_original.",
+          "seeds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "similarities": [
+            0.7327715862137798,
+            0.8123456254206118,
+            -0.438233171330257,
+            -0.1925352861482578,
+            0.27817309363657444
+          ],
+          "n_defined": 5,
+          "mean": 0.23850436955849025,
+          "sd": 0.5520272547844689,
+          "min": -0.438233171330257,
+          "max": 0.8123456254206118
         }
       },
       "integrated_gradients": {
@@ -278,95 +297,112 @@
             },
             {
               "stage": "logits",
-              "similarity_to_original": 0.7733345622237214
+              "similarity_to_original": 0.7732965717018256
             },
             {
               "stage": "dense",
-              "similarity_to_original": 0.7514129720619915
+              "similarity_to_original": 0.7513855781599765
             },
             {
               "stage": "head_bn",
-              "similarity_to_original": 0.7508810997815886
+              "similarity_to_original": 0.750853400194041
             },
             {
               "stage": "pool",
-              "similarity_to_original": 0.6881165468036943
+              "similarity_to_original": 0.688076868192545
             },
             {
               "stage": "backbone_group_1/5",
-              "similarity_to_original": 0.6319223877798539
+              "similarity_to_original": 0.6357491018982209
             },
             {
               "stage": "backbone_group_2/5",
-              "similarity_to_original": 0.6758411427194745
+              "similarity_to_original": 0.6758463245249596
             },
             {
               "stage": "backbone_group_3/5",
-              "similarity_to_original": 0.6734556335286186
+              "similarity_to_original": 0.6735031776561226
             },
             {
               "stage": "backbone_group_4/5",
-              "similarity_to_original": 0.6721850550093318
+              "similarity_to_original": 0.6722153497318218
             },
             {
               "stage": "backbone_group_5/5",
-              "similarity_to_original": 0.6286130818097128
+              "similarity_to_original": 0.6286538598814343
             }
           ]
         },
         "label_randomization": {
           "method": "integrated_gradients",
-          "similarity_to_original": 0.6827691740741301,
+          "similarity_to_original": 0.7210744063278318,
           "n_train_images": 60,
           "epochs": 1,
-          "note": "proxy: head refit on shuffled labels, backbone frozen and unchanged"
+          "note": "proxy: head refit on shuffled labels, backbone frozen and unchanged; repeated across seeds because a single run of this check has an sd of ~0.5 for Grad-CAM. Quote mean and sd, not similarity_to_original.",
+          "seeds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "similarities": [
+            0.7210744063278318,
+            0.7230571858254365,
+            0.7094096894090259,
+            0.7015840045012403,
+            0.7063213139516366
+          ],
+          "n_defined": 5,
+          "mean": 0.7122893200030342,
+          "sd": 0.009376004275327306,
+          "min": 0.7015840045012403,
+          "max": 0.7230571858254365
         }
       }
-    },
-    "recomputed_at": "2026-09-21T06:07:31Z",
-    "recomputed_note": "Only the sanity_checks block was recomputed, after the BatchNorm randomization fix; every other field is from the run stamped in generated_at. Cascading randomization previously reported undefined for every stage from head_bn down, because zeroing a BatchNorm gamma makes the layer emit a constant and the heatmap degenerate. The label-randomization proxy is unchanged by that fix and was not rerun."
+    }
   },
   "runtime": {
     "attention": {
-      "mean_seconds": 0.39866005000658333,
-      "min_seconds": 0.39296179998200387,
-      "max_seconds": 0.4043583000311628,
+      "mean_seconds": 0.5892935000010766,
+      "min_seconds": 0.5831362000026274,
+      "max_seconds": 0.5954507999995258,
       "n_repeats": 2
     },
     "gradcam": {
-      "mean_seconds": 0.7426946999621578,
-      "min_seconds": 0.7421598000219092,
-      "max_seconds": 0.7432295999024063,
+      "mean_seconds": 1.044707599998219,
+      "min_seconds": 1.0239866999909282,
+      "max_seconds": 1.0654285000055097,
       "n_repeats": 2
     },
     "gradcam++": {
-      "mean_seconds": 0.7406062500085682,
-      "min_seconds": 0.7333866000408307,
-      "max_seconds": 0.7478258999763057,
+      "mean_seconds": 1.0737091000046348,
+      "min_seconds": 1.014893099985784,
+      "max_seconds": 1.1325251000234857,
       "n_repeats": 2
     },
     "scorecam": {
-      "mean_seconds": 7.657637700031046,
-      "min_seconds": 7.393004500074312,
-      "max_seconds": 7.92227089998778,
+      "mean_seconds": 10.426722799995332,
+      "min_seconds": 9.929308999999193,
+      "max_seconds": 10.92413659999147,
       "n_repeats": 2
     },
     "integrated_gradients": {
-      "mean_seconds": 3.5269069499336183,
-      "min_seconds": 3.492609499953687,
-      "max_seconds": 3.5612043999135494,
+      "mean_seconds": 4.948880449999706,
+      "min_seconds": 4.658608800004004,
+      "max_seconds": 5.239152099995408,
       "n_repeats": 2
     },
     "occlusion": {
-      "mean_seconds": 20.256996500014793,
-      "min_seconds": 19.819715399993584,
-      "max_seconds": 20.694277600036003,
+      "mean_seconds": 28.903922850004165,
+      "min_seconds": 28.793723799986765,
+      "max_seconds": 29.014121900021564,
       "n_repeats": 2
     },
     "shap": {
-      "mean_seconds": 30.609592199965846,
-      "min_seconds": 30.568693000008352,
-      "max_seconds": 30.65049139992334,
+      "mean_seconds": 30.893648150013178,
+      "min_seconds": 30.884276000026148,
+      "max_seconds": 30.903020300000207,
       "n_repeats": 2
     }
   },
@@ -374,7 +410,6 @@
     "status": "not_available",
     "reason": "Needs D-2 (VinDr-CXR boxes) -- deferred, see docs/decisions_log.md"
   },
-  "scope_note": "Faithfulness/ROAD computed on 12 test images for attention, gradcam, gradcam++ and integrated_gradients and 4 for scorecam, occlusion and shap (cost-scoped, see scripts/evaluate.py). Robustness/complexity computed only for attention, gradcam, gradcam++ and integrated_gradients. Sanity checks (cascading + label randomization) computed only for gradcam and integrated_gradients.",
   "audits": {
     "shortcut_audit_summary": {
       "n_samples": 30,
@@ -1082,5 +1117,5 @@
       "reason": "Kermany ships no sex/age metadata in this repo -- deferred (A-2)"
     }
   },
-  "encoding_note": "Non-finite floats (NaN/Inf) were rewritten as null on 2026-09-21 so this file is valid strict JSON. NaN appeared in sanity_checks.*.cascading_randomization.stages[].similarity_to_original, where it meant \"undefined\": the randomized model emits a constant heatmap and a rank correlation against a constant is undefined, not zero. The values themselves are unchanged; only the encoding is. src/xai_cxr/evaluation/sanity_checks.py now emits null directly."
+  "scope_note": "Faithfulness/ROAD computed on 12 test images for attention, gradcam, gradcam++ and integrated_gradients and 4 for scorecam, occlusion and shap (cost-scoped, see scripts/evaluate.py). Robustness/complexity computed only for attention, gradcam, gradcam++ and integrated_gradients. Sanity checks (cascading + label randomization, the latter repeated over 5 seeds because one run of it has an sd of ~0.5) computed only for gradcam and integrated_gradients."
 }

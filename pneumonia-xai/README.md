@@ -69,10 +69,28 @@ Windows notes if `make` isn't installed.
    (`docs/failure_gallery.md`).
 5. `python app/app.py` -- the case-reader UI at <http://localhost:5000>.
 
-Optional: `python scripts/dataset_analysis.py` regenerates the `/dataset`
-page's class-distribution/pie/sample-image plots from the current split
-manifests (only needed again if you re-run `build_splits.py` with different
-ratios).
+Steps 2 and 4 are ordered, not interchangeable: `evaluate.py` rewrites
+`models/metrics.json` wholesale and `audit.py` only appends its `audits` key,
+so running the audit first means the evaluation wipes it. Run it in the order
+above, or re-run `audit.py` afterwards -- `evaluate.py` leaves a
+`not_available` marker in `audits` saying exactly that, and the dashboard
+surfaces it.
+
+Optional:
+
+- `python scripts/dataset_analysis.py` regenerates the `/dataset` page's
+  class-distribution/pie/sample-image plots from the current split manifests
+  (only needed again if you re-run `build_splits.py` with different ratios).
+- `python scripts/operating_point.py` sweeps decision thresholds on the test
+  split to show whether a sensitivity difference between two models is a
+  ranking difference or just a threshold placement.
+- `python scripts/screening_threshold.py` picks a screening operating point on
+  the **calibration** split and reports it on test, so the quoted sensitivity
+  is a held-out estimate rather than the best of ~582 thresholds tried on the
+  images it is scored on. This is the number to cite for "how many pneumonias
+  would a screening threshold miss"; see `docs/decisions_log.md`.
+- `python scripts/calibrate.py` fits temperature scaling on calibration and
+  reports Brier/ECE on test.
 
 `src/train.py`, `src/evaluate.py`, `src/gradcam.py`, `src/shap_explain.py`
 are kept as thin wrappers around the `scripts/` versions above, so this run

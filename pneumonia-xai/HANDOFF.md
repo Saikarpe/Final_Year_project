@@ -1,7 +1,8 @@
 # Session handoff — resume point
 
-**Last updated:** 2026-09-21 ~11:40 IST
-**Branch:** `main` — see §9 for the final results and what remains
+**Last updated:** 2026-09-23 ~23:50 IST
+**Branch:** `main` — §9 has the results, **§11 corrects two numbers in §9/§10
+and is the one to read before writing anything up**
 
 Read this first, then `docs/decisions_log.md` for the *why* behind every choice.
 
@@ -10,9 +11,17 @@ Read this first, then `docs/decisions_log.md` for the *why* behind every choice.
 ## 1. Where things stand in one line
 
 The model is **trained, evaluated and audited**. The pipeline is finished,
-`models/metrics.json` describes the current DenseNet121 (`2a279eeff356`), all
-47 tests pass and the app serves the real model. The headline finding is that
-M-1b **ties** the VGG16 baseline rather than beating it — see §9.
+`models/metrics.json` describes the current DenseNet121 (`2a279eeff356`) and
+is single-provenance, all 73 tests pass and the app serves the real model. The
+headline finding is that M-1b **ties** the VGG16 baseline rather than beating
+it — see §9.
+
+Two numbers in §9/§10 were corrected on 2026-09-23 and the old ones must not
+be quoted: the screening operating point misses **8** pneumonias, not 4 (the
+old figure was selected on the split it was scored on), and the E-8 label
+randomization is **0.24 ± 0.55** for Grad-CAM against **0.71 ± 0.01** for IG
+over five seeds, not the single draws previously reported. Both corrections
+strengthen rather than weaken the conclusions — see §11.
 
 ---
 
@@ -184,7 +193,7 @@ five times in a row. Now one knob — `inference_batch` in
 - [x] ~~Finish `evaluate.py` + `audit.py`~~ — done, see §3
 - [x] ~~Report test AUROC vs the baseline~~ — done, see §9
 - [x] ~~Restart the app on the real model; confirm the stale banner clears~~
-- [x] ~~Final full test-suite run~~ — **59 passed**
+- [x] ~~Final full test-suite run~~ — **73 passed** (2026-09-23, 8m00s)
 - [x] ~~Mobile layout never verified visually~~ — verified at 360px on all
       five pages with headless Chrome; one real overflow bug found and fixed
 - [x] ~~Temperature scaling~~ — implemented; it does **not** close the Brier
@@ -194,10 +203,14 @@ five times in a row. Now one knob — `inference_batch` in
       (D-4), localisation mIoU (D-2), subgroup analysis (A-2), study mode
       (D-6/P-1), concept bottleneck (M-3/D-5). These need data-use agreements,
       ethics approval or recruited clinicians — they are not coding tasks.
-- [ ] `evaluate.py` has not been rerun end-to-end since the BatchNorm fix. The
-      sanity-check block was refreshed surgically instead
-      (`scripts/refresh_sanity_checks.py`), and `sanity_checks.recomputed_at`
-      records that. A full rerun would make the file single-provenance again.
+- [x] ~~`evaluate.py` has not been rerun end-to-end since the BatchNorm fix~~ —
+      done 2026-09-23. `metrics.json` is single-provenance;
+      `sanity_checks.recomputed_at` is gone. See §11 for the three defects the
+      rerun exposed.
+- [ ] **Uncommitted.** §11's work is in the working tree, not in git.
+- [ ] Bug 16 (checkpoint regression across training stages) is still **not
+      exercised** — only a future two-stage training run reaches that path.
+      Unchanged from §6; re-running the evaluation suite does not test it.
 
 ---
 
@@ -256,18 +269,35 @@ difference either way, which is the honest claim.
 J weights a missed pneumonia exactly as heavily as a false alarm. For triage
 it should not. The same unchanged model, re-tuned:
 
+Threshold selected on **calibration**, reported on **test**
+(`python scripts/screening_threshold.py`, cached to
+`runs/screening_threshold.json`):
+
 | objective | thr | sens | spec | FN | FP |
 |---|---|---|---|---|---|
-| max sensitivity, specificity >= 95% | 0.1465 | 97.7% | 95.4% | 10 | 7 |
-| max sensitivity, specificity >= 90% | 0.0692 | 99.1% | 90.1% | **4** | 15 |
+| max sensitivity, specificity >= 95% | 0.1819 | 97.2% | 96.7% | 12 | 5 |
+| max sensitivity, specificity >= 90% | 0.0957 | 98.1% | 91.4% | **8** | 13 |
 
-4 missed of 431, against the baseline's 19, for 10 extra false positives out
+**8** missed of 431, against the baseline's 19, for 8 extra false positives out
 of 151 normals. `tune_threshold_at_sensitivity` already implements this policy
 and `configs/model.yaml` selects it; the reported threshold was deliberately
 left at J because it was fixed on val before test was touched.
 
-**Caveat:** those sweep rows are computed on the test split, so they show the
-achievable trade-off, not a held-out estimate of it. Re-tune on calibration.
+> **Corrected 2026-09-23.** This table previously read **4** missed at the 90%
+> floor. That row was produced by `operating_point.py`, which selects the
+> threshold on the test split and then scores it on the same split -- the best
+> of ~582 candidates on the very images it is evaluated on. Re-selected on the
+> calibration split and applied unchanged to test, the honest figure is **8**.
+> The selection optimism was therefore 4 pneumonias, i.e. the old number was
+> exactly twice as good as reality. **Quote 8, not 4.**
+>
+> The argument is unaffected -- 8 against the baseline's 19 is still the
+> finding, and still shows Youden's J is the wrong objective for triage. Only
+> the number moves, and it moves from unquotable to quotable.
+> `operating_point.py` is unchanged and still correct for *its* question
+> (is the M-1b/VGG16 sensitivity gap a threshold artefact?), which is a
+> comparison both models enter on identical terms. See `docs/decisions_log.md`,
+> entry "The screening operating point was selected on test".
 
 Full reasoning: `docs/decisions_log.md`, entry
 "M-1b vs the VGG16 baseline: the sensitivity gap is a threshold artefact".
@@ -288,6 +318,9 @@ Full reasoning: `docs/decisions_log.md`, entry
   Label randomization is the cleaner evidence (Grad-CAM 0.266, IG 0.683 --
   Grad-CAM falls further). Cascading randomization agrees over the stages
   where it is defined, but only the first three are; see below.
+  > **Superseded by §11.** "Grad-CAM 0.266" is one draw from a distribution
+  > with sd 0.55; two later runs of the same check gave 0.090 and 0.734. The
+  > conclusion holds but this is not the number that supports it.
 
 ### Fixed this session: the sanity checks were emitting NaN
 
@@ -368,7 +401,7 @@ statistics left alone) all 10 stages are defined, and the result matters:
 | logits | +0.477 | +0.773 |
 | dense | **-0.335** | +0.751 |
 | fully randomized | +0.230 | **+0.629** |
-| label randomization | +0.266 | +0.683 |
+| label randomization (one run -- see §11) | +0.266 | +0.683 |
 
 **Grad-CAM passes. IG largely fails.** With every layer randomized, IG's
 attribution still correlates +0.63 with the trained model's. An explanation
@@ -422,3 +455,121 @@ tests/test_calibration.py               10 tests
 ```
 
 Test count went 47 -> 59.
+
+---
+
+## 11. Third pass, 2026-09-23 evening -- the rerun, and what it caught
+
+**Goal:** make `models/metrics.json` single-provenance. Since 2026-09-21 it
+had been a hybrid again: `generated_at 04:55:18Z`, a `sanity_checks` block
+surgically refreshed at `06:07:31Z`, and `audits` appended after that.
+
+`evaluate.py` was rerun end-to-end on the GPU and `audit.py` after it. That
+part succeeded on the first attempt. The rerun then caught **three defects**,
+two of which would have put a wrong number in the write-up.
+
+### What reproduced exactly
+
+Every classification and faithfulness number, bit-for-bit: AUROC 0.9947 and
+its CI, the 26/2 confusion matrix, Brier 0.0630, the threshold 0.3447, all
+seven deletion AUCs, the shortcut-audit deltas, and the failure gallery
+(regenerated byte-identical). The 20 cascading-randomization stages reproduce
+to ~5 decimal places; the residual drift is GPU convolution nondeterminism.
+
+This is the result that makes the rest of the section trustworthy: the
+pipeline *is* reproducible, so the things that moved, moved for a reason.
+
+### Defect 1 -- the screening claim was twice as good as reality
+
+§9 above quoted "4 missed of 431" for a screening operating point. That
+threshold was chosen on the test split and then scored on the test split --
+the best of ~582 candidates on the very images it is evaluated on.
+
+Re-selected on the **calibration** split and applied unchanged to test
+(`scripts/screening_threshold.py`, cached to `runs/screening_threshold.json`):
+
+| objective | thr | sens | spec | FN | FP |
+|---|---|---|---|---|---|
+| max sens, spec >= 90% | 0.0957 | 98.1% | 91.4% | **8** | 13 |
+| max sens, spec >= 95% | 0.1819 | 97.2% | 96.7% | 12 | 5 |
+
+**Quote 8, not 4.** The argument is untouched -- 8 against the VGG16
+baseline's 19 is still the finding, and still shows Youden's J is the wrong
+objective for triage -- but the number was a selection artefact and would not
+have survived a viva.
+
+### Defect 2 -- a "seeded, deterministic" check that was neither
+
+`label_randomization_test` seeds its shuffled labels and its head
+re-initialisation. It does not seed the head's three dropout layers, which
+draw from TensorFlow's *global* RNG during the refit. So the one number in
+the suite that depends on a training step was the one number that moved:
+**0.266 (Sept 21), 0.090, then 0.734** across three runs of the same check.
+
+Fixed with `tf.random.set_seed(seed)`. `tests/test_sanity_check_determinism.py`
+pins it and was verified to fail against the unfixed code.
+
+### Defect 3 -- seeding was necessary but not sufficient: sd = 0.55
+
+A reproducible arbitrary number is still arbitrary. Measured over five seeds:
+
+| method | mean | sd | min | max |
+|---|---|---|---|---|
+| Grad-CAM | +0.239 | **0.552** | -0.438 | +0.812 |
+| Integrated Gradients | +0.712 | **0.009** | +0.702 | +0.723 |
+
+Grad-CAM ranges over 1.25 of the 2.0 this statistic can span. The three
+historical values (0.266 / 0.090 / 0.734) are simply three draws from that,
+and they invite three different conclusions.
+
+**The spread is the result, not noise around it.** Adebayo et al.'s test asks
+whether an explanation changes when the model stops being the trained model:
+
+- **Grad-CAM passes.** Its map swings from anti-correlated to strongly
+  correlated depending only on what the shuffled-label refit did to the head.
+  That is an explanation tracking the model.
+- **IG fails, and more clearly than before.** It returns +0.70 to +0.72 *every
+  time*, sd 0.009. Whatever happens to the head, IG's attribution is unmoved
+  -- it is substantially reading the input. "IG scored 0.683 once" was a much
+  weaker way to say this.
+
+`evaluate.py` now runs the check over `LABEL_RAND_SEEDS = (0,1,2,3,4)` and
+records `mean`/`sd`/`min`/`max`/`similarities`. `similarity_to_original` is
+kept as the first seed's value so older readers keep working. The dashboard
+shows `mean +/- sd [min, max]`, falling back to the single value (labelled as
+such) for an older file. Cost: about +6 minutes on the suite.
+
+**For the write-up:** cite Grad-CAM 0.24 +/- 0.55 against IG 0.71 +/- 0.01
+over five seeds, and make the argument about the sd. Where one precise number
+is needed, use the cascading-randomization stages instead -- those are fully
+seeded and reproduce across runs.
+
+### Also fixed
+
+- **The evaluate/audit ordering is now in the artifact, not just in prose.**
+  `evaluate.py` writes `audits: {status: not_available, reason: "...re-run
+  scripts/audit.py"}`, in the same idiom the genuinely-deferred sections use.
+  The dashboard previously crashed on that shape (`'%.3f'|format(None)`); it
+  is now guarded and was rendered in all three states to confirm.
+- README documents the ordering constraint and the optional scripts.
+
+### New in this pass
+
+```
+scripts/screening_threshold.py          select on calibration, report on test
+tests/test_screening_threshold.py       11 tests
+tests/test_sanity_check_determinism.py  3 tests
+src/xai_cxr/evaluation/sanity_checks.py tf.random.set_seed + label_randomization_repeated
+```
+
+Test count 59 -> 73.
+
+### State
+
+`models/metrics.json` is single-provenance again: one `evaluate.py` run
+stamped `2026-09-23T18:36:49Z` against model `2a279eeff356`, with `audits`
+appended by the `audit.py` run immediately after and nothing patched in
+between. `sanity_checks.recomputed_at` is **absent**, which is the marker to
+check -- if it reappears, the file is a hybrid again.
+
+**Nothing is committed.** All of the above is in the working tree.

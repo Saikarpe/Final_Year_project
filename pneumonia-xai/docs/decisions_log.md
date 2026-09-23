@@ -731,3 +731,156 @@ monospace too, and breaking those anywhere shattered each one into seven
 lines down a narrow column instead of wrapping cleanly at the hyphen. The
 shipped rule is scoped to `.meta code`, which is used on exactly that one
 dashboard line.
+
+## 2026-09-23 -- The screening operating point was selected on test; the honest number is 8, not 4
+
+**Decision:** Select the screening threshold on the calibration split and
+report it on test (`scripts/screening_threshold.py`), and correct the
+headline screening claim from 4 missed pneumonias to **8**.
+
+**Why:** The threshold sweep in `scripts/operating_point.py` picks the
+threshold on the test split and then scores it on that same split. That is
+the right procedure for the question that script asks -- "is the sensitivity
+gap against the VGG16 baseline a threshold artefact?" -- because it asks what
+each model *could* achieve and treats both identically. It is the wrong
+procedure for the different claim §9 of HANDOFF went on to make, that a
+screening operating point "misses 4 of 431". Choosing the best of ~582
+candidate thresholds on the same 582 images it is then evaluated on reports
+the maximum of a noisy quantity, not an estimate of it.
+
+Re-selected on the 563-image calibration split -- never trained on, disjoint
+by patient from test -- and applied unchanged to test:
+
+| objective | selected on | thr | sens | spec | FN | FP |
+|---|---|---|---|---|---|---|
+| max sens, spec >= 90% | **calibration** | 0.0957 | 98.1% | 91.4% | **8** | 13 |
+| max sens, spec >= 90% | test (optimistic) | 0.0692 | 99.1% | 90.1% | 4 | 15 |
+| max sens, spec >= 95% | **calibration** | 0.1819 | 97.2% | 96.7% | **12** | 5 |
+| max sens, spec >= 95% | test (optimistic) | 0.1465 | 97.7% | 95.4% | 10 | 7 |
+
+So the selection optimism is **4 pneumonias at the 90% floor** -- the
+previously quoted figure was exactly twice as good as the held-out result.
+
+**What survives:** the argument, entirely. 8 missed of 431 against the
+baseline's 19 at a comparable specificity is still the substantive finding,
+and it is still evidence that Youden's J is the wrong objective for triage.
+Only the number changes, and it changes from an unquotable one to a quotable
+one.
+
+**How to apply:** quote 8/431 at the 90% floor, and cite
+`runs/screening_threshold.json` (which records both the honest and the
+optimistic row, deliberately, so the gap is auditable). `operating_point.py`
+is unchanged and still correct for its own question; the two scripts answer
+different questions and both are kept.
+
+**Note on split reuse:** the calibration split is already spent on conformal
+prediction (U-2). Reusing it here is deliberate -- both uses need only
+held-out scores and neither fits parameters the other consumes -- and it is
+preferable to using val, which early stopping has already selected on.
+
+## 2026-09-23 -- The label-randomization check was not reproducible, and it looked like it was
+
+**Decision:** Seed TensorFlow's global RNG inside
+`label_randomization_test` (`tf.random.set_seed(seed)`), and re-run
+`evaluate.py` so `metrics.json` records a value the current code actually
+reproduces.
+
+**Why:** Re-running the evaluation suite end-to-end reproduced every
+classification and faithfulness number bit-for-bit -- AUROC, the confusion
+matrix, Brier, all seven deletion AUCs, and all 20 cascading-randomization
+stages. One number did not: Grad-CAM's label-randomization similarity came
+out **0.090** against the **0.266** recorded on 2026-09-21.
+
+The function looked deterministic and was not. Both of its explicit random
+draws -- the shuffled labels and the head re-initialisation -- take
+`RandomState(seed)`. But the refit calls `clone.fit(...)`, and the head
+carries three dropout layers (`spatial_dropout`, `dropout`, `head_dropout`,
+rates 0.1/0.4/0.2). Dropout draws its masks from TensorFlow's *global* RNG,
+which nothing seeded. So the one number in the suite that depends on a
+training step was the one number that moved.
+
+**Why it matters more than the size of the gap suggests:** the swing
+(0.266 -> 0.090) is wider than the Grad-CAM/IG difference this check is cited
+to establish. The conclusion is unaffected in direction -- IG sits at 0.683
+and 0.685 across the two runs while Grad-CAM moves between 0.09 and 0.27, so
+Grad-CAM falls much further either way -- but a reviewer who re-ran the suite
+would have got a different headline number from the one in the write-up, out
+of a file whose entire purpose is reproducibility.
+
+**How to apply:** quote the E-8 label-randomization figures as "Grad-CAM
+falls far below IG" and cite both values, rather than leaning on the third
+decimal place. The cascading-randomization stages are fully seeded and *are*
+reproducible to the bit; prefer them where a precise number is needed.
+
+**Residual nondeterminism:** GPU convolution backprop is still
+nondeterministic at the last decimal or two (TF is not run with
+`TF_DETERMINISTIC_OPS`). Seeding removes the dominant term, not all of it.
+`tests/test_sanity_check_determinism.py` pins the contract -- and was checked
+against the unfixed code, where it fails, so it is not a test that would pass
+regardless.
+
+**Note on scope:** `tf.random.set_seed` mutates global state. That is safe
+for the one caller: `evaluate.py` runs the sanity checks second-to-last, and
+the only step after them (E-11 runtime timing) does not consume the RNG
+stream.
+
+> **Extended below.** Seeding makes the number reproducible, which is
+> necessary but not sufficient: measuring the spread across seeds showed the
+> check itself has an sd of ~0.55 for Grad-CAM, so *any* single seeded value
+> is an arbitrary pick from a wide distribution. See the next entry.
+
+## 2026-09-23 -- The label-randomization check has an sd of 0.55, and that spread IS the result
+
+**Decision:** Report the label-randomization check as a distribution over five
+seeds (`label_randomization_repeated`, new `mean`/`sd`/`min`/`max`/
+`similarities` fields) rather than as one number, and state the E-8 conclusion
+in terms of *stability* rather than in terms of which method scores lower.
+
+**Why:** Seeding the check (previous entry) made it reproducible but not
+meaningful. Running it across five seeds on the trained model:
+
+| method | mean | sd | min | max |
+|---|---|---|---|---|
+| Grad-CAM | +0.239 | **0.553** | -0.440 | +0.812 |
+| Integrated Gradients | +0.712 | **0.009** | +0.702 | +0.723 |
+
+Grad-CAM's similarity ranges over 1.25 of the 2.0 the statistic can span. Any
+single run is therefore close to uninformative -- and the three runs this
+project actually performed reported 0.266, 0.090 and 0.734, which read as
+"Grad-CAM clearly passes", "Grad-CAM emphatically passes" and "Grad-CAM is
+indistinguishable from IG" respectively. The write-up would have quoted
+whichever run happened to be last.
+
+**What the spread means -- this is the part worth understanding.** Adebayo et
+al.'s test asks whether an explanation *changes* when the model stops being
+the trained model. It does not ask for a low correlation as such; it asks for
+dependence on the weights.
+
+- Grad-CAM's map swings from anti-correlated (-0.44) to strongly correlated
+  (+0.81) depending only on what the shuffled-label refit did to the head.
+  That is an explanation tracking the model. It **passes**, and the variance
+  is the evidence, not a defect in the measurement.
+- IG returns +0.70 to +0.72 **every time**, sd 0.009. Whatever the refit does
+  to the head, IG's attribution is unmoved. That is an explanation that is
+  substantially reading the *input*, which is precisely the failure mode the
+  test exists to detect, and it is a far stronger statement of it than "IG
+  scored 0.683 once".
+
+So the original conclusion survives intact; the *statistic* supporting it was
+wrong. Quote mean and sd.
+
+**How to apply:** cite Grad-CAM 0.24 +/- 0.55 against IG 0.71 +/- 0.01 over
+five seeds, and make the argument about sd, not about which mean is lower.
+Where a single precise number is wanted, use the cascading-randomization
+stages instead: those are fully seeded and reproduce to five decimal places
+across runs (the residual drift is GPU convolution nondeterminism).
+
+**Cost:** five refits per method instead of one, about +6 minutes on the whole
+suite. `similarity_to_original` is retained as the first seed's value so older
+readers of `metrics.json` and the dashboard keep working; the dashboard shows
+`mean +/- sd [min, max]` when the aggregate is present and falls back to the
+single value, labelled as such, when it is not.
+
+**Not done:** five seeds is enough to separate sd 0.55 from sd 0.01, which is
+the only distinction being drawn. It is not enough to put a tight interval on
+either mean, and no significance test is claimed on them.
