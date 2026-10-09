@@ -1,0 +1,90 @@
+{# The living radiograph behind every page. Purely decorative: aria-hidden,
+   pointer-events off, and every moving part is a transform or opacity change
+   on its own compositor layer, so it never repaints the content above it.
+   prefers-reduced-motion freezes all of it (see _style.html), and the
+   particle loop stops whenever the tab is hidden. #}
+<div class="xr-bg xr-bg--{{ active or 'home' }}" aria-hidden="true">
+  <div class="xr-aurora"></div>
+  <div class="xr-rig" id="xrRig">
+    <div class="xr-breathe">
+      <img class="xr-chest" src="{{ url_for('static', filename='bg/chest.svg') }}" alt="" decoding="async" />
+      <span class="xr-lung xr-lung--l"></span>
+      <span class="xr-lung xr-lung--r"></span>
+      <span class="xr-ping" style="--x:31%;--y:44%;--d:0s"></span>
+      <span class="xr-ping" style="--x:66%;--y:58%;--d:2.6s"></span>
+      <span class="xr-ping" style="--x:38%;--y:70%;--d:5.1s"></span>
+      <span class="xr-scan"></span>
+    </div>
+  </div>
+  <canvas class="xr-dust" id="xrDust"></canvas>
+  <div class="xr-vignette"></div>
+</div>
+<script>
+  (function () {
+    var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var rig = document.getElementById('xrRig');
+
+    /* Pointer parallax: the chest leans a few pixels toward the cursor.
+       rAF-coalesced so a fast mouse costs one style write per frame. */
+    if (rig && !still && matchMedia('(pointer: fine)').matches) {
+      var tx = 0, ty = 0, queued = false;
+      window.addEventListener('pointermove', function (e) {
+        tx = (e.clientX / innerWidth - .5) * -18;
+        ty = (e.clientY / innerHeight - .5) * -12;
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(function () {
+          queued = false;
+          rig.style.transform = 'translate3d(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px,0)';
+        });
+      }, { passive: true });
+    }
+
+    /* Drifting "photon" dust. ~40 points at a capped 30 fps; skipped
+       entirely under reduced motion and paused while the tab is hidden. */
+    var cv = document.getElementById('xrDust');
+    if (!cv || still || !cv.getContext) return;
+    var ctx = cv.getContext('2d'), dpr = Math.min(window.devicePixelRatio || 1, 2), pts = [], last = 0, raf = 0;
+    function size() {
+      cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+      cv.style.width = innerWidth + 'px'; cv.style.height = innerHeight + 'px';
+    }
+    function seed() {
+      pts = [];
+      var n = innerWidth < 700 ? 20 : 42;
+      for (var i = 0; i < n; i++) pts.push({
+        x: Math.random() * innerWidth, y: Math.random() * innerHeight,
+        r: .6 + Math.random() * 1.6, vy: -(.08 + Math.random() * .25), vx: (Math.random() - .5) * .12,
+        a: .15 + Math.random() * .45, t: Math.random() * 6.28
+      });
+    }
+    var tint = '120,190,255';
+    function readTint() {
+      tint = document.documentElement.getAttribute('data-theme') === 'light' ? '30,90,180' : '120,190,255';
+    }
+    function frame(ts) {
+      raf = requestAnimationFrame(frame);
+      if (ts - last < 33) return;
+      last = ts;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      for (var i = 0; i < pts.length; i++) {
+        var p = pts[i];
+        p.x += p.vx; p.y += p.vy; p.t += .03;
+        if (p.y < -5) { p.y = innerHeight + 5; p.x = Math.random() * innerWidth; }
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, 6.283);
+        ctx.fillStyle = 'rgba(' + tint + ',' + (p.a * (.6 + .4 * Math.sin(p.t))).toFixed(3) + ')';
+        ctx.fill();
+      }
+    }
+    size(); seed(); readTint();
+    window.addEventListener('resize', function () { size(); seed(); });
+    new MutationObserver(readTint).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    document.addEventListener('visibilitychange', function () {
+      cancelAnimationFrame(raf);
+      if (!document.hidden) raf = requestAnimationFrame(frame);
+    });
+    raf = requestAnimationFrame(frame);
+  })();
+</script>

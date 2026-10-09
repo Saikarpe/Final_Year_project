@@ -75,6 +75,23 @@ def test_healthz_reports_the_model_state(client):
     assert 'ok' in payload and 'backbone' in payload
 
 
+def test_sample_xray_serves_a_test_image_or_hides_the_button(client, app_module, tmp_path, monkeypatch):
+    # No dataset (a fresh clone / CI): 404, and the home page drops the button.
+    monkeypatch.setattr(app_module, '_sample_rows', [])
+    assert client.get('/sample-xray').status_code == 404
+    assert b'id="sampleBtn"' not in client.get('/').data
+
+    # Dataset present: an image comes back, and its filename -- which encodes
+    # the ground-truth label in this corpus -- is not leaked in the response.
+    path = tmp_path / 'person1_bacteria_1.jpeg'
+    path.write_bytes(_jpeg().getvalue())
+    monkeypatch.setattr(app_module, '_sample_rows', [str(path)])
+    resp = client.get('/sample-xray')
+    assert resp.status_code == 200 and resp.mimetype == 'image/jpeg'
+    assert b'bacteria' not in b''.join(f'{k}: {v}'.encode() for k, v in resp.headers.items())
+    assert b'id="sampleBtn"' in client.get('/').data
+
+
 def test_audit_csv_downloads(client):
     resp = client.get('/audit.csv')
     assert resp.status_code == 200

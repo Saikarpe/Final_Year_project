@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 900" fill="none">
+<defs>
+  <radialGradient id="lung" cx="50%" cy="45%" r="60%">
+    <stop offset="0" stop-color="#7fc4ff" stop-opacity=".30"/>
+    <stop offset=".6" stop-color="#3b82f6" stop-opacity=".12"/>
+    <stop offset="1" stop-color="#1e3a8a" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="torso" cx="50%" cy="42%" r="58%">
+    <stop offset="0" stop-color="#9fd2ff" stop-opacity=".16"/>
+    <stop offset=".75" stop-color="#2563eb" stop-opacity=".05"/>
+    <stop offset="1" stop-color="#0b1220" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="heart" cx="45%" cy="45%" r="55%">
+    <stop offset="0" stop-color="#e8f4ff" stop-opacity=".34"/>
+    <stop offset="1" stop-color="#93c5fd" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="bone" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#eaf5ff"/>
+    <stop offset="1" stop-color="#8cc2ff"/>
+  </linearGradient>
+  <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="14"/></filter>
+  <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
+    <feGaussianBlur stdDeviation="3.2" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+</defs>
+
+<!-- soft tissue -->
+<path d="M340,20 C330,90 250,120 100,150 C20,170 5,260 15,380
+         L40,880 L760,880 L785,380 C795,260 780,170 700,150
+         C550,120 470,90 460,20 Z" fill="url(#torso)"/>
+
+<!-- lung fields -->
+<g filter="url(#soft)">
+  <path d="M360,170 C250,150 145,230 120,420 C105,560 110,700 150,770
+           C220,740 310,735 355,760 C360,560 370,320 360,170 Z" fill="url(#lung)"/>
+  <path d="M440,170 C550,150 655,230 680,420 C695,560 690,700 650,770
+           C580,740 490,735 445,760 C440,560 430,320 440,170 Z" fill="url(#lung)"/>
+  <ellipse cx="455" cy="590" rx="125" ry="140" fill="url(#heart)"/>
+</g>
+
+<!-- shoulders -->
+<g fill="url(#bone)" opacity=".16" filter="url(#soft)">
+  <ellipse cx="70" cy="215" rx="46" ry="56"/><ellipse cx="730" cy="215" rx="46" ry="56"/>
+</g>
+<g stroke="url(#bone)" stroke-linecap="round" opacity=".28" stroke-width="9">
+  <path d="M100,235 C130,300 150,380 160,450"/>
+  <path d="M700,235 C670,300 650,380 640,450"/>
+</g>
+
+<!-- ribs: a wide soft stroke under a thin bright core reads as cortical bone -->
+<g stroke="url(#bone)" stroke-linecap="round" filter="url(#glow)">
+  <g><path d="M374,200 C314.3,172 240.7,192 228.7,246 C225.3,286 245.8,312 273.2,328" stroke-width="10.0" opacity="0.500"/><path d="M374,247 C299.7,219 213.4,239 199.4,293 C195.4,333 219.5,359 251.6,375" stroke-width="9.6" opacity="0.475"/><path d="M374,294 C287.0,266 189.8,286 173.9,340 C169.4,380 196.5,406 232.7,422" stroke-width="9.2" opacity="0.450"/><path d="M374,341 C276.7,313 170.7,333 153.5,387 C148.6,427 178.1,453 217.6,469" stroke-width="8.8" opacity="0.425"/><path d="M374,388 C269.5,360 157.3,380 139.0,434 C133.8,474 165.1,500 206.9,516" stroke-width="8.4" opacity="0.400"/><path d="M374,435 C265.6,407 150.1,427 131.3,481 C125.9,521 158.2,547 201.1,563" stroke-width="8.0" opacity="0.375"/><path d="M374,482 C265.0,454 148.9,474 130.0,528 C124.6,568 157.0,594 200.2,610" stroke-width="7.6" opacity="0.350"/><path d="M374,529 C265.0,501 148.9,521 130.0,575 C124.6,615 157.0,641 200.2,657" stroke-width="7.2" opacity="0.325"/><path d="M374,576 C265.0,548 148.9,568 130.0,622 C124.6,662 157.0,688 200.2,704" stroke-width="6.8" opacity="0.300"/><path d="M374,623 C278.0,595 173.1,615 156.0,669 C151.1,709 180.4,735 219.4,751" stroke-width="6.4" opacity="0.275"/><path d="M374,670 C291.0,642 197.3,662 182.0,716 C177.6,756 203.8,782 238.7,798" stroke-width="6.0" opacity="0.250"/></g>
+  <g transform="translate(800,0) scale(-1,1)"><path d="M374,200 C314.3,172 240.7,192 228.7,246 C225.3,286 245.8,312 273.2,328" stroke-width="10.0" opacity="0.500"/><path d="M374,247 C299.7,219 213.4,239 199.4,293 C195.4,333 219.5,359 251.6,375" stroke-width="9.6" opacity="0.475"/><path d="M374,294 C287.0,266 189.8,286 173.9,340 C169.4,380 196.5,406 232.7,422" stroke-width="9.2" opacity="0.450"/><path d="M374,341 C276.7,313 170.7,333 153.5,387 C148.6,427 178.1,453 217.6,469" stroke-width="8.8" opacity="0.425"/><path d="M374,388 C269.5,360 157.3,380 139.0,434 C133.8,474 165.1,500 206.9,516" stroke-width="8.4" opacity="0.400"/><path d="M374,435 C265.6,407 150.1,427 131.3,481 C125.9,521 158.2,547 201.1,563" stroke-width="8.0" opacity="0.375"/><path d="M374,482 C265.0,454 148.9,474 130.0,528 C124.6,568 157.0,594 200.2,610" stroke-width="7.6" opacity="0.350"/><path d="M374,529 C265.0,501 148.9,521 130.0,575 C124.6,615 157.0,641 200.2,657" stroke-width="7.2" opacity="0.325"/><path d="M374,576 C265.0,548 148.9,568 130.0,622 C124.6,662 157.0,688 200.2,704" stroke-width="6.8" opacity="0.300"/><path d="M374,623 C278.0,595 173.1,615 156.0,669 C151.1,709 180.4,735 219.4,751" stroke-width="6.4" opacity="0.275"/><path d="M374,670 C291.0,642 197.3,662 182.0,716 C177.6,756 203.8,782 238.7,798" stroke-width="6.0" opacity="0.250"/></g>
+</g>
+<g stroke="#f4faff" stroke-linecap="round" stroke-width="1.3" opacity=".38">
+  <g><path d="M374,200 C314.3,172 240.7,192 228.7,246 C225.3,286 245.8,312 273.2,328"/><path d="M374,247 C299.7,219 213.4,239 199.4,293 C195.4,333 219.5,359 251.6,375"/><path d="M374,294 C287.0,266 189.8,286 173.9,340 C169.4,380 196.5,406 232.7,422"/><path d="M374,341 C276.7,313 170.7,333 153.5,387 C148.6,427 178.1,453 217.6,469"/><path d="M374,388 C269.5,360 157.3,380 139.0,434 C133.8,474 165.1,500 206.9,516"/><path d="M374,435 C265.6,407 150.1,427 131.3,481 C125.9,521 158.2,547 201.1,563"/><path d="M374,482 C265.0,454 148.9,474 130.0,528 C124.6,568 157.0,594 200.2,610"/><path d="M374,529 C265.0,501 148.9,521 130.0,575 C124.6,615 157.0,641 200.2,657"/><path d="M374,576 C265.0,548 148.9,568 130.0,622 C124.6,662 157.0,688 200.2,704"/><path d="M374,623 C278.0,595 173.1,615 156.0,669 C151.1,709 180.4,735 219.4,751"/><path d="M374,670 C291.0,642 197.3,662 182.0,716 C177.6,756 203.8,782 238.7,798"/></g>
+  <g transform="translate(800,0) scale(-1,1)"><path d="M374,200 C314.3,172 240.7,192 228.7,246 C225.3,286 245.8,312 273.2,328"/><path d="M374,247 C299.7,219 213.4,239 199.4,293 C195.4,333 219.5,359 251.6,375"/><path d="M374,294 C287.0,266 189.8,286 173.9,340 C169.4,380 196.5,406 232.7,422"/><path d="M374,341 C276.7,313 170.7,333 153.5,387 C148.6,427 178.1,453 217.6,469"/><path d="M374,388 C269.5,360 157.3,380 139.0,434 C133.8,474 165.1,500 206.9,516"/><path d="M374,435 C265.6,407 150.1,427 131.3,481 C125.9,521 158.2,547 201.1,563"/><path d="M374,482 C265.0,454 148.9,474 130.0,528 C124.6,568 157.0,594 200.2,610"/><path d="M374,529 C265.0,501 148.9,521 130.0,575 C124.6,615 157.0,641 200.2,657"/><path d="M374,576 C265.0,548 148.9,568 130.0,622 C124.6,662 157.0,688 200.2,704"/><path d="M374,623 C278.0,595 173.1,615 156.0,669 C151.1,709 180.4,735 219.4,751"/><path d="M374,670 C291.0,642 197.3,662 182.0,716 C177.6,756 203.8,782 238.7,798"/></g>
+</g>
+
+<!-- clavicles -->
+<g stroke="url(#bone)" stroke-linecap="round" stroke-width="10" opacity=".55" filter="url(#glow)">
+  <path d="M366,176 C310,186 250,150 190,152 S115,170 95,160"/>
+  <path d="M434,176 C490,186 550,150 610,152 S685,170 705,160"/>
+</g>
+
+<!-- spine -->
+<g fill="url(#bone)" filter="url(#glow)"><rect x="379.0" y="60" width="42.0" height="29" rx="9" opacity="0.220"/><rect x="379.2" y="97" width="41.5" height="29" rx="9" opacity="0.244"/><rect x="379.5" y="134" width="41.0" height="29" rx="9" opacity="0.267"/><rect x="379.8" y="171" width="40.5" height="29" rx="9" opacity="0.289"/><rect x="380.0" y="208" width="40.0" height="29" rx="9" opacity="0.310"/><rect x="380.2" y="245" width="39.5" height="29" rx="9" opacity="0.329"/><rect x="380.5" y="282" width="39.0" height="29" rx="9" opacity="0.345"/><rect x="380.8" y="319" width="38.5" height="29" rx="9" opacity="0.359"/><rect x="381.0" y="356" width="38.0" height="29" rx="9" opacity="0.369"/><rect x="381.2" y="393" width="37.5" height="29" rx="9" opacity="0.376"/><rect x="381.5" y="430" width="37.0" height="29" rx="9" opacity="0.380"/><rect x="381.8" y="467" width="36.5" height="29" rx="9" opacity="0.380"/><rect x="382.0" y="504" width="36.0" height="29" rx="9" opacity="0.376"/><rect x="382.2" y="541" width="35.5" height="29" rx="9" opacity="0.369"/><rect x="382.5" y="578" width="35.0" height="29" rx="9" opacity="0.359"/><rect x="382.8" y="615" width="34.5" height="29" rx="9" opacity="0.345"/><rect x="383.0" y="652" width="34.0" height="29" rx="9" opacity="0.329"/><rect x="383.2" y="689" width="33.5" height="29" rx="9" opacity="0.310"/><rect x="383.5" y="726" width="33.0" height="29" rx="9" opacity="0.289"/><rect x="383.8" y="763" width="32.5" height="29" rx="9" opacity="0.267"/><rect x="384.0" y="800" width="32.0" height="29" rx="9" opacity="0.244"/></g>
+
+<!-- diaphragm -->
+<g stroke="#bfe0ff" stroke-linecap="round" stroke-width="3" opacity=".42" filter="url(#glow)">
+  <path d="M110,740 C170,650 290,655 360,735"/>
+  <path d="M690,755 C630,670 510,675 440,750"/>
+</g>
+</svg>

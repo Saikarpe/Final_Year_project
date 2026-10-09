@@ -1,44 +1,54 @@
   /* ─────────────────────────────────────────────────────────────────────
-     PneumoScan design tokens.
+     PneumoScan design tokens -- glass edition.
 
      Dark is the default because this is a radiograph reader and a bright
      chrome around a greyscale image destroys the perceived contrast of the
      image itself -- the same reason reading rooms are dark. Light is a real
-     alternative (projectors, print, shared screens), not an afterthought, so
-     every colour below is defined twice and nothing is hardcoded downstream.
+     alternative (projectors, print, shared screens), so every colour below is
+     defined twice and nothing is hardcoded downstream.
 
-     What was removed, deliberately: the animated grid background, the 26
-     floating neon orbs, the pulsing dropzone border and the button scanline.
-     They cost a repaint every frame next to the one image on the page the
-     user is meant to be studying, and they read as a demo rather than as an
-     instrument.
+     Surfaces are frosted glass over an animated radiograph (_bg.html). An
+     earlier revision removed a busy animated background because it repainted
+     next to the image under review; this one is built so that cannot happen:
+     every moving part is transform/opacity on its own layer, the image
+     viewer (.imgstage) stays on an opaque black stage, the whole thing
+     freezes under prefers-reduced-motion, and it pauses in hidden tabs.
+     --surface-solid exists for the few places glass cannot work: sticky
+     table headers and tooltips, which would otherwise show rows through.
      ───────────────────────────────────────────────────────────────────── */
   :root{
-    --bg:#0b0f16; --surface:#131a24; --surface-2:#1a2330; --line:#243141;
-    --ink:#e6edf6; --muted:#93a4bb; --faint:#6b7d95;
-    --accent:#3ea8ff; --accent-soft:rgba(62,168,255,.12); --accent-line:rgba(62,168,255,.38);
-    --red:#ff6b6b; --red-soft:rgba(255,107,107,.12);
-    --green:#39d98a; --green-soft:rgba(57,217,138,.12);
-    --amber:#ffb454; --amber-soft:rgba(255,180,84,.12);
-    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.28);
-    --radius:14px; --radius-sm:10px;
+    --bg:#050a14; --bg-2:#0a1730;
+    --surface:rgba(15,27,48,.56); --surface-2:rgba(30,48,78,.48); --surface-solid:#0e192c;
+    --line:rgba(140,185,255,.16); --glass-hi:rgba(255,255,255,.07);
+    --ink:#eaf2fc; --muted:#a3b4cc; --faint:#7d90ab;
+    --accent:#3b9dff; --accent-2:#6fc3ff; --accent-soft:rgba(59,157,255,.14); --accent-line:rgba(59,157,255,.42);
+    --red:#ff6b6b; --red-soft:rgba(255,107,107,.13);
+    --green:#39d98a; --green-soft:rgba(57,217,138,.13);
+    --amber:#ffb454; --amber-soft:rgba(255,180,84,.13);
+    --shadow:0 1px 1px rgba(0,0,0,.3),0 18px 48px -12px rgba(0,0,0,.55);
+    --blur:18px;
+    --xr-opacity:.62; --xr-filter:none;
+    --radius:16px; --radius-sm:11px;
     --focus:0 0 0 2px var(--bg),0 0 0 4px var(--accent);
     color-scheme:dark;
   }
   :root[data-theme="light"]{
-    --bg:#f4f6fa; --surface:#ffffff; --surface-2:#eef2f8; --line:#d8e0ec;
-    --ink:#101923; --muted:#526580; --faint:#7286a0;
-    --accent:#0b69c7; --accent-soft:rgba(11,105,199,.09); --accent-line:rgba(11,105,199,.3);
-    --red:#c72f3d; --red-soft:rgba(199,47,61,.09);
-    --green:#12794e; --green-soft:rgba(18,121,78,.1);
-    --amber:#9a6108; --amber-soft:rgba(154,97,8,.12);
-    --shadow:0 1px 2px rgba(16,25,35,.06),0 6px 18px rgba(16,25,35,.08);
+    --bg:#e9eff8; --bg-2:#d7e4f6;
+    --surface:rgba(255,255,255,.66); --surface-2:rgba(240,245,252,.72); --surface-solid:#ffffff;
+    --line:rgba(20,50,100,.13); --glass-hi:rgba(255,255,255,.8);
+    --ink:#0f1a2a; --muted:#4b5f7c; --faint:#687d99;
+    --accent:#0b69c7; --accent-2:#2f8de4; --accent-soft:rgba(11,105,199,.1); --accent-line:rgba(11,105,199,.32);
+    --red:#c72f3d; --red-soft:rgba(199,47,61,.1);
+    --green:#12794e; --green-soft:rgba(18,121,78,.11);
+    --amber:#9a6108; --amber-soft:rgba(154,97,8,.13);
+    --shadow:0 1px 2px rgba(16,25,35,.06),0 16px 40px -14px rgba(16,40,80,.22);
+    --xr-opacity:.3; --xr-filter:invert(1) hue-rotate(180deg) saturate(1.4);
     color-scheme:light;
   }
 
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
-  body{margin:0;background:var(--bg);color:var(--ink);
+  body{margin:0;background:var(--bg);color:var(--ink);min-height:100vh;
     font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
     font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
   a{color:var(--accent);text-decoration:none}
@@ -66,8 +76,9 @@
   }
 
   /* ── Navigation ───────────────────────────────────────────────────── */
-  nav{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);
-    backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  nav{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 62%,transparent);
+    -webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%);
+    border-bottom:1px solid var(--line)}
   .nav-in{max-width:1180px;margin:0 auto;padding:11px 22px;display:flex;align-items:center;gap:12px}
   .logo{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex:none;
     background:var(--accent-soft);border:1px solid var(--accent-line)}
@@ -92,7 +103,8 @@
   /* ── Layout ───────────────────────────────────────────────────────── */
   .wrap{max-width:1180px;margin:0 auto;padding:42px 22px 80px}
   .card,.glass{background:var(--surface);border:1px solid var(--line);
-    border-radius:var(--radius);box-shadow:var(--shadow)}
+    border-radius:var(--radius);box-shadow:inset 0 1px 0 var(--glass-hi),var(--shadow);
+    -webkit-backdrop-filter:blur(var(--blur)) saturate(150%);backdrop-filter:blur(var(--blur)) saturate(150%)}
   h1{font-size:clamp(28px,4.5vw,40px);margin:0 0 12px;letter-spacing:-.025em;line-height:1.15}
   .glow{color:var(--ink)}
   .sub{color:var(--muted);max-width:60ch;font-size:16px}
@@ -106,7 +118,7 @@
   table{width:100%;border-collapse:collapse;font-size:14px}
   th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line)}
   th{color:var(--muted);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;
-    position:sticky;top:0;background:var(--surface);z-index:1}
+    position:sticky;top:0;background:var(--surface-solid);z-index:1}
   td{font-variant-numeric:tabular-nums}
   tbody tr:last-child td{border-bottom:0}
   tbody tr:hover{background:var(--surface-2)}
@@ -115,16 +127,18 @@
   /* ── Buttons ──────────────────────────────────────────────────────── */
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;
     font:inherit;font-weight:550;font-size:14.5px;padding:11px 20px;border-radius:var(--radius-sm);
-    border:1px solid var(--accent-line);background:var(--accent);color:#fff;
-    transition:filter .15s,transform .05s}
+    border:1px solid var(--accent-line);color:#fff;
+    background:linear-gradient(180deg,var(--accent-2),var(--accent));
+    box-shadow:0 8px 22px -8px var(--accent),inset 0 1px 0 rgba(255,255,255,.25);
+    transition:filter .15s,transform .05s,box-shadow .2s}
   .btn:hover{filter:brightness(1.08);text-decoration:none}
   .btn:active{transform:translateY(1px)}
   .btn[disabled],.btn[aria-busy="true"]{opacity:.6;cursor:progress;pointer-events:none}
-  .btn.ghost{background:var(--surface);color:var(--ink);border-color:var(--line)}
+  .btn.ghost{background:var(--surface-2);color:var(--ink);border-color:var(--line);box-shadow:none}
   .btn.ghost:hover{border-color:var(--accent-line);color:var(--accent)}
   .btn.small{padding:8px 14px;font-size:13.5px}
-  .btn.agree{background:transparent;color:var(--green);border-color:var(--green)}
-  .btn.disagree{background:transparent;color:var(--red);border-color:var(--red)}
+  .btn.agree{background:var(--green-soft);color:var(--green);border-color:var(--green);box-shadow:none}
+  .btn.disagree{background:var(--red-soft);color:var(--red);border-color:var(--red);box-shadow:none}
   .full{width:100%;margin-top:16px}
 
   select,input[type=text],textarea{background:var(--surface-2);color:var(--ink);
@@ -151,7 +165,7 @@
     border-radius:50%;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);
     font-size:10.5px;font-weight:700;cursor:help}
   .tip span{visibility:hidden;opacity:0;transition:opacity .12s;position:absolute;bottom:150%;left:50%;
-    transform:translateX(-50%);width:230px;padding:9px 11px;border-radius:9px;background:var(--surface-2);
+    transform:translateX(-50%);width:230px;padding:9px 11px;border-radius:9px;background:var(--surface-solid);
     border:1px solid var(--line);box-shadow:var(--shadow);color:var(--ink);font-weight:400;font-size:12px;
     line-height:1.5;text-align:left;z-index:9}
   .tip:hover span,.tip:focus-visible span{visibility:visible;opacity:1}
@@ -178,8 +192,76 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-  .foot{margin:0;padding:26px 22px 40px;text-align:center;color:var(--faint);font-size:12.5px;
-    line-height:1.7;border-top:1px solid var(--line)}
+  .foot{position:relative;margin:0;padding:26px 22px 40px;text-align:center;color:var(--faint);font-size:12.5px;
+    line-height:1.7;border-top:1px solid var(--line);
+    background:color-mix(in srgb,var(--bg) 55%,transparent);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+  /* Content sits above the fixed background layer. */
+  main,.foot,.wrap{position:relative;z-index:1}
+
+  /* ── Living radiograph background (markup + script in _bg.html) ───── */
+  .xr-bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;
+    background:
+      radial-gradient(1100px 700px at 78% 18%,color-mix(in srgb,var(--accent) 22%,transparent),transparent 60%),
+      radial-gradient(900px 600px at 8% 90%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 60%),
+      linear-gradient(180deg,var(--bg-2),var(--bg) 70%)}
+  .xr-aurora{position:absolute;inset:-20%;opacity:.5;will-change:transform;
+    background:conic-gradient(from 210deg at 70% 40%,transparent 0 40%,
+      color-mix(in srgb,var(--accent-2) 18%,transparent) 50%,transparent 62% 100%);
+    filter:blur(60px);animation:xr-aurora 26s ease-in-out infinite alternate}
+  .xr-rig{position:absolute;top:50%;right:4%;width:min(760px,58vw);aspect-ratio:8/9;
+    margin-top:calc(min(760px,58vw) * -9 / 16);
+    transform:translate3d(0,0,0);transition:transform .9s cubic-bezier(.2,.7,.2,1);will-change:transform}
+  .xr-breathe{position:absolute;inset:0;transform-origin:50% 40%;will-change:transform;
+    animation:xr-breathe 6.4s ease-in-out infinite}
+  .xr-chest{position:absolute;inset:0;width:100%;height:100%;opacity:var(--xr-opacity);filter:var(--xr-filter);
+    -webkit-mask-image:radial-gradient(70% 62% at 50% 46%,#000 55%,transparent 100%);
+            mask-image:radial-gradient(70% 62% at 50% 46%,#000 55%,transparent 100%)}
+  /* Lung fields "fill" on the inhale -- opacity only, in phase with the
+     scale so the two read as one breath rather than two effects. */
+  .xr-lung{position:absolute;top:24%;width:30%;height:56%;border-radius:48% 48% 40% 40%;
+    background:radial-gradient(closest-side,color-mix(in srgb,var(--accent-2) 30%,transparent),transparent);
+    opacity:.25;animation:xr-fill 6.4s ease-in-out infinite;will-change:opacity}
+  .xr-lung--l{left:17%} .xr-lung--r{right:17%}
+  /* "Analysis" markers that light up as the scan line passes. */
+  .xr-ping{position:absolute;left:var(--x);top:var(--y);width:12px;height:12px;margin:-6px 0 0 -6px;
+    border-radius:50%;background:var(--accent-2);opacity:0;
+    box-shadow:0 0 12px 2px var(--accent-2);animation:xr-ping 7.6s ease-out infinite;animation-delay:var(--d)}
+  .xr-ping::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1.5px solid var(--accent-2);
+    animation:xr-ring 7.6s ease-out infinite;animation-delay:inherit}
+  /* The sweep is a soft elliptical glow with a hairline leading edge, drawn
+     with gradients alone -- no mask, so it has no hard box edges anywhere. */
+  .xr-scan{position:absolute;left:0;right:0;top:0;height:18%;will-change:transform,opacity;
+    background:radial-gradient(48% 100% at 50% 100%,color-mix(in srgb,var(--accent-2) 30%,transparent),transparent 72%);
+    animation:xr-scan 7.6s cubic-bezier(.45,.05,.55,.95) infinite}
+  .xr-scan::after{content:"";position:absolute;left:12%;right:12%;bottom:0;height:2px;border-radius:2px;
+    background:linear-gradient(90deg,transparent,var(--accent-2) 30%,#fff 50%,var(--accent-2) 70%,transparent);
+    box-shadow:0 0 14px 2px color-mix(in srgb,var(--accent-2) 70%,transparent);opacity:.9}
+  .xr-dust{position:absolute;inset:0}
+  .xr-vignette{position:absolute;inset:0;
+    background:radial-gradient(120% 90% at 50% 40%,transparent 55%,color-mix(in srgb,var(--bg) 85%,transparent))}
+  /* Inner pages are for reading tables: same scene, centred and quieter. */
+  .xr-bg:not(.xr-bg--home) .xr-rig{right:50%;margin-right:calc(min(760px,58vw) / -2)}
+  .xr-bg:not(.xr-bg--home) .xr-chest{opacity:calc(var(--xr-opacity) * .5)}
+  .xr-bg:not(.xr-bg--home) .xr-scan,.xr-bg:not(.xr-bg--home) .xr-ping{display:none}
+
+  @keyframes xr-breathe{0%,100%{transform:scale(1) translateY(0)}45%{transform:scale(1.035) translateY(-6px)}}
+  @keyframes xr-fill{0%,100%{opacity:.18}45%{opacity:.5}}
+  @keyframes xr-scan{0%{transform:translateY(-30%);opacity:0}8%{opacity:.85}82%{opacity:.85}100%{transform:translateY(420%);opacity:0}}
+  @keyframes xr-ping{0%,4%{opacity:0;transform:scale(.4)}10%{opacity:.95;transform:scale(1)}40%{opacity:.6}60%,100%{opacity:0}}
+  @keyframes xr-ring{0%,8%{opacity:0;transform:scale(.6)}14%{opacity:.8}50%,100%{opacity:0;transform:scale(3.4)}}
+  @keyframes xr-aurora{0%{transform:rotate(0deg) scale(1)}100%{transform:rotate(18deg) scale(1.12)}}
+
+  @media(max-width:820px){
+    .xr-rig,.xr-bg:not(.xr-bg--home) .xr-rig{right:50%;width:min(620px,120vw);
+      margin-right:calc(min(620px,120vw) / -2);margin-top:calc(min(620px,120vw) * -9 / 16)}
+    .xr-chest{opacity:calc(var(--xr-opacity) * .6)}
+  }
+  @media (prefers-reduced-motion: reduce){.xr-dust{display:none}}
+  /* Browsers without backdrop-filter get an opaque surface, not unreadable text. */
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    .card,.glass{background:var(--surface-solid)}
+  }
 
   @media(max-width:960px){.stats{grid-template-columns:1fr 1fr}}
   @media(max-width:820px){

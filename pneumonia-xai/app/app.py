@@ -246,13 +246,63 @@ def _run_case(file_storage) -> dict:
     }
 
 
+def _hero_stats(catalog: dict) -> dict:
+    """The three numbers on the landing page, read from metrics.json.
+
+    The design mockup printed "95%" and "< 5s" as literals; here each one is
+    derived from the last evaluation run, or comes back None so the template
+    says "not evaluated yet" instead of inventing a figure.
+    """
+    metrics = _load_metrics() or {}
+    cls = metrics.get('classification', {})
+    ss = cls.get('sensitivity_specificity') or {}
+    counts = [ss.get(k) for k in ('tp', 'tn', 'fp', 'fn')]
+    accuracy = None
+    if all(isinstance(c, int) for c in counts) and sum(counts):
+        accuracy = (counts[0] + counts[1]) / sum(counts)
+    gradcam = catalog.get(DEFAULT_METHOD) or {}
+    return {
+        'accuracy': accuracy,
+        'n_test': cls.get('n_test'),
+        'n_methods': len(catalog),
+        'default_seconds': gradcam.get('seconds'),
+        'default_label': gradcam.get('label', DEFAULT_METHOD),
+    }
+
+
+def _dataset_root() -> str:
+    root = data_cfg.dataset_dir
+    return root if os.path.isabs(root) else os.path.join(REPO_ROOT, root)
+
+
+_sample_rows = None
+
+
+def _sample_candidates() -> list:
+    """Held-out test images that are actually on disk. The dataset is not in
+    git, so on a fresh clone this is empty and the sample button is hidden."""
+    global _sample_rows
+    if _sample_rows is None:
+        try:
+            rows = read_manifest('test')
+        except OSError:
+            rows = []
+        root = _dataset_root()
+        _sample_rows = [os.path.join(root, rel) for rel, _ in rows
+                        if os.path.exists(os.path.join(root, rel))]
+    return _sample_rows
+
+
 def _page_context(**extra) -> dict:
     state = get_model()
+    catalog = method_catalog(state['xai'])
     ctx = {
-        'method_info': method_catalog(state['xai']),
+        'method_info': catalog,
         'model_error': state['error'],
         'cam_grid': list(state['xai'].cam_grid_shape) if state['xai'] else None,
         'input_size': list(data_cfg.img_size),
+        'hero': _hero_stats(catalog),
+        'has_samples': bool(_sample_candidates()),
     }
     ctx.update(extra)
     return ctx
@@ -304,6 +354,23 @@ def api_predict():
         import traceback
         traceback.print_exc()
         return jsonify({'error': f'Prediction failed: {exc}'}), 500
+
+
+@app.route('/sample-xray')
+def sample_xray():
+    """A random held-out test radiograph for "Use sample image". Test split
+    only, so a demo never shows the model an image it was trained on."""
+    import random
+    candidates = _sample_candidates()
+    if not candidates:
+        return jsonify({'error': 'No sample images: the dataset is not installed.'}), 404
+    path = random.choice(candidates)
+    with open(path, 'rb') as f:
+        raw = f.read()
+    mime = 'image/png' if path.lower().endswith('.png') else 'image/jpeg'
+    # The original filename is deliberately not sent: names like
+    # person101_bacteria_483.jpeg give the ground-truth label away.
+    return Response(raw, mimetype=mime, headers={'Cache-Control': 'no-store'})
 
 
 @app.route('/explain/<uid>/<method>')
