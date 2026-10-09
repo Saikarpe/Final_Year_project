@@ -151,7 +151,7 @@ def _speed_label(seconds) -> str:
     return f'~{seconds / 60:.0f} min'
 
 
-def _save_validated_upload(file_storage, uid: str) -> str:
+def _save_validated_upload(file_storage, uid: str) -> tuple[str, tuple[int, int]]:
     """Write the upload to disk only after Pillow confirms it decodes.
 
     `file.save()` straight to disk accepted anything with a filename -- a
@@ -178,7 +178,7 @@ def _save_validated_upload(file_storage, uid: str) -> str:
     image = Image.open(io.BytesIO(raw)).convert('RGB')
     path = os.path.join(UPLOAD_DIR, f'{uid}_input.jpg')
     image.save(path, format='JPEG', quality=95)
-    return path
+    return path, image.size
 
 
 def _heatmap_path(uid: str, method: str) -> str:
@@ -203,8 +203,14 @@ def _run_case(file_storage) -> dict:
     xai_model = state['xai']
 
     uid = uuid.uuid4().hex
-    img_path = _save_validated_upload(file_storage, uid)
+    img_path, original_size = _save_validated_upload(file_storage, uid)
     input_hash = hashlib.sha256(open(img_path, 'rb').read()).hexdigest()[:16]
+    # An image smaller than the network input has to be upscaled, and the
+    # model never saw upscaled images in training. Measured on the test split:
+    # shrinking NORMAL radiographs to ~120 px thumbnails turned 31% of them
+    # into false PNEUMONIA calls. Flagged, not refused -- the call stays the
+    # user's, but they should know the number is less trustworthy.
+    low_resolution = min(original_size) < min(data_cfg.img_size)
 
     img = load_image(img_path, data_cfg.img_size)
     proba = float(xai_model.proba(img[np.newaxis])[0])
@@ -226,6 +232,7 @@ def _run_case(file_storage) -> dict:
         audit_conn, 'inference', case_uid=uid, input_hash=input_hash, model_hash=state['hash'],
         proba=proba, predicted_label=predicted_label, prediction_set=pred_set, abstained=abstain,
         alpha=DEFAULT_ALPHA, decision_threshold=threshold, method=DEFAULT_METHOD,
+        original_size=list(original_size), low_resolution=low_resolution,
     )
 
     return {
@@ -243,6 +250,8 @@ def _run_case(file_storage) -> dict:
         'heatmap_url': heatmap_url,
         'default_method': DEFAULT_METHOD,
         'cam_grid': list(xai_model.cam_grid_shape),
+        'original_size': list(original_size),
+        'low_resolution': low_resolution,
     }
 
 

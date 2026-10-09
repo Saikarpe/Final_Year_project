@@ -114,6 +114,24 @@ def test_predict_returns_a_calibrated_result(trained_client):
     assert len(data['cam_grid']) == 2
 
 
+def test_result_flags_images_smaller_than_the_model_input(trained_client, app_module):
+    side = min(app_module.data_cfg.img_size)
+    small = trained_client.post('/api/predict', data={'xray': (_jpeg((side - 1, side - 1)), 's.jpg')},
+                                content_type='multipart/form-data').get_json()
+    big = trained_client.post('/api/predict', data={'xray': (_jpeg((side, side + 40)), 'b.jpg')},
+                              content_type='multipart/form-data').get_json()
+    assert small['low_resolution'] is True and small['original_size'] == [side - 1, side - 1]
+    assert big['low_resolution'] is False
+
+
+def test_every_result_page_carries_the_paediatric_scope_warning(trained_client):
+    # _jpeg takes (rows, cols), so this is a 120 px wide, 114 px tall image
+    html = trained_client.post('/predict', data={'xray': (_jpeg((114, 120)), 't.jpg')},
+                               content_type='multipart/form-data').data
+    assert b'Trained on children aged 1&ndash;5 only.' in html
+    assert b'Low-resolution image (120&times;114' in html
+
+
 def test_explain_endpoint_serves_each_supported_method(trained_client, app_module):
     uid = trained_client.post('/api/predict', data={'xray': (_jpeg(), 'case.jpg')},
                               content_type='multipart/form-data').get_json()['uid']
