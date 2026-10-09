@@ -48,6 +48,10 @@ MAX_UPLOAD_BYTES = 10 * 1024 * 1024        # the 10 MB the upload panel advertis
 ALLOWED_FORMATS = {'JPEG', 'PNG'}
 DEFAULT_ALPHA = 0.1
 DEFAULT_METHOD = 'gradcam'
+# Set on a public deployment (the Hugging Face Space's Dockerfile does). A
+# full case uid is enough to open that case's upload under static/uploads/,
+# so a publicly readable audit log must only show a prefix of it.
+PUBLIC_MODE = os.environ.get('PNEUMOSCAN_PUBLIC') == '1'
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = MAX_UPLOAD_BYTES
@@ -505,12 +509,15 @@ def dataset():
 @app.route('/audit')
 def audit_view():
     rows = auditlog.fetch_recent(audit_conn, limit=200)
+    if PUBLIC_MODE:
+        for row in rows:
+            row['case_uid'] = auditlog.redact_uid(row['case_uid'])
     return render_template('audit.html', active='audit', rows=rows, **_page_context())
 
 
 @app.route('/audit.csv')
 def audit_csv():
-    csv_data = auditlog.to_csv(audit_conn)
+    csv_data = auditlog.to_csv(audit_conn, redact_uids=PUBLIC_MODE)
     return Response(csv_data, mimetype='text/csv',
                     headers={'Content-Disposition': 'attachment; filename=audit_log.csv'})
 

@@ -67,7 +67,14 @@ def fetch_recent(conn: sqlite3.Connection, limit: int = 200) -> list[dict]:
     return rows
 
 
-def to_csv(conn: sqlite3.Connection) -> str:
+def redact_uid(uid: str | None) -> str | None:
+    """A case uid is the key to that case's uploaded image under
+    static/uploads/, so a publicly readable log must not carry it whole.
+    Eight hex characters still distinguish rows; they cannot fetch a file."""
+    return f'{uid[:8]}…' if uid else uid
+
+
+def to_csv(conn: sqlite3.Connection, redact_uids: bool = False) -> str:
     cur = conn.execute(
         'SELECT id, ts, event_type, case_uid, input_hash, model_hash, payload_json '
         'FROM audit_log ORDER BY id ASC')
@@ -75,5 +82,7 @@ def to_csv(conn: sqlite3.Connection) -> str:
     writer = csv.writer(buf)
     writer.writerow(['id', 'ts', 'event_type', 'case_uid', 'input_hash', 'model_hash', 'payload_json'])
     for row in cur.fetchall():
+        if redact_uids:
+            row = (*row[:3], redact_uid(row[3]), *row[4:])
         writer.writerow(row)
     return buf.getvalue()

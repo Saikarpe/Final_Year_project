@@ -132,6 +132,21 @@ def test_every_result_page_carries_the_paediatric_scope_warning(trained_client):
     assert b'Low-resolution image (120&times;114' in html
 
 
+def test_public_mode_never_exposes_a_full_case_uid(trained_client, app_module, monkeypatch):
+    # A full uid opens /static/uploads/<uid>_input.jpg, i.e. someone else's X-ray.
+    uid = trained_client.post('/api/predict', data={'xray': (_jpeg(), 'p.jpg')},
+                              content_type='multipart/form-data').get_json()['uid']
+    assert trained_client.get(f'/static/uploads/{uid}_input.jpg').status_code == 200
+
+    monkeypatch.setattr(app_module, 'PUBLIC_MODE', True)
+    for route in ('/audit', '/audit.csv'):
+        body = trained_client.get(route).data
+        assert uid.encode() not in body and uid[:8].encode() in body
+
+    monkeypatch.setattr(app_module, 'PUBLIC_MODE', False)
+    assert uid.encode() in trained_client.get('/audit.csv').data
+
+
 def test_explain_endpoint_serves_each_supported_method(trained_client, app_module):
     uid = trained_client.post('/api/predict', data={'xray': (_jpeg(), 'case.jpg')},
                               content_type='multipart/form-data').get_json()['uid']
