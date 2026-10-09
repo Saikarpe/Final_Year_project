@@ -52,6 +52,11 @@ DEFAULT_METHOD = 'gradcam'
 # full case uid is enough to open that case's upload under static/uploads/,
 # so a publicly readable audit log must only show a prefix of it.
 PUBLIC_MODE = os.environ.get('PNEUMOSCAN_PUBLIC') == '1'
+# Optional allow-list, e.g. "gradcam,gradcam++,attention" on a host with too
+# little memory for Score-CAM/IG/Occlusion/SHAP. Everything that lists or
+# serves methods goes through method_catalog(), so a disabled method is
+# neither offered in the UI nor accepted by /explain.
+ENABLED_METHODS = {m.strip() for m in os.environ.get('PNEUMOSCAN_METHODS', '').split(',') if m.strip()}
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = MAX_UPLOAD_BYTES
@@ -131,6 +136,8 @@ def method_catalog(xai_model=None) -> dict:
     runtime = metrics.get('runtime', {})
     quality = metrics.get('explanation', {})
     names = available_methods(xai_model) if xai_model is not None else list(METHODS)
+    if ENABLED_METHODS:
+        names = [n for n in names if n in ENABLED_METHODS]
 
     catalog = {}
     for name in names:
@@ -547,4 +554,5 @@ def too_large(_):
 
 if __name__ == '__main__':
     # host 0.0.0.0 so this also works unmodified inside the Dockerfile's container.
-    app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
+    # PORT is how Render (and most PaaS hosts) say where to listen.
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False, threaded=True)

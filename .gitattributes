@@ -1,0 +1,4 @@
+# Shell scripts run inside Linux containers; a CRLF shebang fails with
+# "exec format error"/"not found" there.
+*.sh text eol=lf
+Dockerfile text eol=lf

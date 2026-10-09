@@ -147,6 +147,15 @@ def test_public_mode_never_exposes_a_full_case_uid(trained_client, app_module, m
     assert uid.encode() in trained_client.get('/audit.csv').data
 
 
+def test_method_allow_list_hides_and_refuses_disabled_methods(trained_client, app_module, monkeypatch):
+    uid = trained_client.post('/api/predict', data={'xray': (_jpeg(), 'm.jpg')},
+                              content_type='multipart/form-data').get_json()['uid']
+    monkeypatch.setattr(app_module, 'ENABLED_METHODS', {'gradcam'})
+    assert list(app_module.method_catalog(app_module.get_model()['xai'])) == ['gradcam']
+    assert trained_client.get(f'/explain/{uid}/scorecam').status_code == 400
+    assert trained_client.get(f'/explain/{uid}/gradcam').status_code == 200
+
+
 def test_explain_endpoint_serves_each_supported_method(trained_client, app_module):
     uid = trained_client.post('/api/predict', data={'xray': (_jpeg(), 'case.jpg')},
                               content_type='multipart/form-data').get_json()['uid']

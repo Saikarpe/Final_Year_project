@@ -1,0 +1,19 @@
+# Render Blueprint for the PneumoScan AI case reader.
+# Dashboard -> New -> Blueprint -> pick this repo; Render asks for HF_TOKEN.
+# See pneumonia-xai/deploy/render/Dockerfile for why the image is trimmed.
+services:
+  - type: web
+    name: pneumoscan-ai
+    runtime: docker
+    plan: free
+    dockerfilePath: ./pneumonia-xai/deploy/render/Dockerfile
+    dockerContext: ./pneumonia-xai
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: MODEL_REPO
+        value: saikarpe4747/pneumoscan-model
+      - key: HF_TOKEN
+        sync: false          # secret: a READ token for the private model repo
+      - key: PNEUMOSCAN_METHODS
+        value: gradcam,gradcam++,attention
